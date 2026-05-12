@@ -1,5 +1,6 @@
 package io.github.jaeykweon.jpaautoenumstring.hibernate6;
 
+import io.github.jaeykweon.jpaautoenumstring.AutoEnumStringConfig;
 import io.github.jaeykweon.jpaautoenumstring.EnumFieldDescriptor;
 import io.github.jaeykweon.jpaautoenumstring.EnumFieldScanner;
 import jakarta.persistence.EnumType;
@@ -18,7 +19,11 @@ import java.util.logging.Logger;
 public class Hibernate6EnumStringIntegrator implements Integrator {
 
     private static final Logger log = Logger.getLogger(Hibernate6EnumStringIntegrator.class.getName());
-    private final EnumFieldScanner scanner = new EnumFieldScanner();
+    private final EnumFieldScanner scanner;
+
+    public Hibernate6EnumStringIntegrator(AutoEnumStringConfig config) {
+        this.scanner = new EnumFieldScanner(config);
+    }
 
     @Override
     public void integrate(Metadata metadata, BootstrapContext bootstrapContext,
@@ -26,21 +31,21 @@ public class Hibernate6EnumStringIntegrator implements Integrator {
         int count = 0;
         for (PersistentClass pc : metadata.getEntityBindings()) {
             Class<?> entityClass = pc.getMappedClass();
+            if (entityClass == null) continue;
             List<EnumFieldDescriptor> fields = scanner.scan(entityClass);
             for (EnumFieldDescriptor desc : fields) {
                 try {
                     Property property = pc.getProperty(desc.getFieldName());
                     if (property != null && property.getValue() instanceof BasicValue) {
                         BasicValue basicValue = (BasicValue) property.getValue();
-                        if (basicValue.getEnumerationStyle() == null
-                                || basicValue.getEnumerationStyle() == EnumType.ORDINAL) {
+                        if (basicValue.getEnumerationStyle() == null) {
                             basicValue.setEnumerationStyle(EnumType.STRING);
                             count++;
                         }
                     }
                 } catch (Exception e) {
                     log.warning("[jpa-auto-enum-string] Could not apply STRING mapping to "
-                            + entityClass.getSimpleName() + "." + desc.getFieldName() + ": " + e.getMessage());
+                        + desc.getEntityClass().getSimpleName() + "." + desc.getFieldName() + ": " + e.getMessage());
                 }
             }
         }

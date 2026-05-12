@@ -12,8 +12,19 @@ public class EnumFieldDescriptor {
         this.field = field;
     }
 
-    public Class<?> getEntityClass() { return entityClass; }
-    public Field getField() { return field; }
-    public String getFieldName() { return field.getName(); }
-    public Class<?> getFieldType() { return field.getType(); }
+    public Class<?> getEntityClass() {
+        return entityClass;
+    }
+
+    public Field getField() {
+        return field;
+    }
+
+    public String getFieldName() {
+        return field.getName();
+    }
+
+    public Class<?> getFieldType() {
+        return field.getType();
+    }
 }

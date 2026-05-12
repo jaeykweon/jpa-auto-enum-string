@@ -1,14 +1,16 @@
 package io.github.jaeykweon.jpaautoenumstring.integration;
 
+import com.example.external.ExternalOrder;
 import io.github.jaeykweon.jpaautoenumstring.autoconfigure.JpaAutoEnumStringAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @DataJpaTest
 @ImportAutoConfiguration(JpaAutoEnumStringAutoConfiguration.class)
@@ -19,10 +21,13 @@ class AutoEnumStringIntegrationTest {
     OrderRepository orderRepository;
 
     @Autowired
+    ExternalOrderRepository externalOrderRepository;
+
+    @Autowired
     JdbcTemplate jdbcTemplate;
 
     @Test
-    void enumFieldIsSavedAsString() {
+    void unannotatedEnumField_isSavedAsString() {
         orderRepository.save(new Order("Test order", OrderStatus.CONFIRMED));
 
         String rawValue = jdbcTemplate.queryForObject(
@@ -33,11 +38,39 @@ class AutoEnumStringIntegrationTest {
     }
 
     @Test
-    void enumFieldIsReadBackCorrectly() {
+    void unannotatedEnumField_isReadBackCorrectly() {
         orderRepository.save(new Order("Another order", OrderStatus.SHIPPED));
 
         Order found = orderRepository.findAll().get(0);
 
         assertEquals(OrderStatus.SHIPPED, found.getStatus());
+    }
+
+    // @Enumerated(ORDINAL) is an explicit user decision — the library must not override it.
+    @Test
+    void explicitlyOrdinalAnnotatedField_remainsOrdinal() {
+        orderRepository.save(new Order("Order", OrderStatus.CONFIRMED, OrderStatus.PENDING));
+
+        Number rawValue = jdbcTemplate.queryForObject(
+            "SELECT legacy_status FROM orders LIMIT 1", Number.class
+        );
+
+        assertNotNull(rawValue);
+        assertEquals(0, rawValue.intValue(), "PENDING is ordinal 0 — must stay as ordinal");
+    }
+
+    // ExternalOrder is in a sub-package outside the base package configured by @SpringBootApplication.
+    // The library should not apply STRING mapping to entities outside the scan scope.
+    @Test
+    void entityOutsideBasePackage_enumIsNotMappedAsString() {
+        externalOrderRepository.save(new ExternalOrder(OrderStatus.CONFIRMED));
+
+        Number rawValue = jdbcTemplate.queryForObject(
+            "SELECT status FROM external_orders LIMIT 1", Number.class
+        );
+
+        // CONFIRMED is ordinal 1 (PENDING=0, CONFIRMED=1) — stored as integer when not mapped as STRING
+        assertNotNull(rawValue);
+        assertEquals(1, rawValue.intValue(), "Entity outside base package should be stored as ordinal, not STRING");
     }
 }
