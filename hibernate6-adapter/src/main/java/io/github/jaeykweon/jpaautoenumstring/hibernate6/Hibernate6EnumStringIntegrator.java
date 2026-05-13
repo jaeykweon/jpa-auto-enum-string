@@ -13,6 +13,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -28,7 +29,7 @@ public class Hibernate6EnumStringIntegrator implements Integrator {
     @Override
     public void integrate(Metadata metadata, BootstrapContext bootstrapContext,
                           SessionFactoryImplementor sessionFactory) {
-        int count = 0;
+        List<String> applied = new ArrayList<>();
         for (PersistentClass pc : metadata.getEntityBindings()) {
             Class<?> entityClass = pc.getMappedClass();
             if (entityClass == null) continue;
@@ -40,7 +41,7 @@ public class Hibernate6EnumStringIntegrator implements Integrator {
                         BasicValue basicValue = (BasicValue) property.getValue();
                         if (basicValue.getEnumerationStyle() == null) {
                             basicValue.setEnumerationStyle(EnumType.STRING);
-                            count++;
+                            applied.add(desc.getEntityClass().getSimpleName() + "." + desc.getFieldName());
                         }
                     }
                 } catch (Exception e) {
@@ -49,8 +50,9 @@ public class Hibernate6EnumStringIntegrator implements Integrator {
                 }
             }
         }
-        if (count > 0) {
-            log.info("[jpa-auto-enum-string] Applied STRING mapping to " + count + " enum field(s).");
+        if (!applied.isEmpty()) {
+            log.info("[jpa-auto-enum-string] Applied STRING mapping to " + applied.size()
+                + " enum field(s): " + String.join(", ", applied));
         }
     }
 

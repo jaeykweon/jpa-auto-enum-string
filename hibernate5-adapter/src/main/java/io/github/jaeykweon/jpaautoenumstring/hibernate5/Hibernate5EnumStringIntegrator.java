@@ -12,6 +12,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -29,7 +30,7 @@ public class Hibernate5EnumStringIntegrator implements Integrator {
     @Override
     public void integrate(Metadata metadata, SessionFactoryImplementor sessionFactory,
                           SessionFactoryServiceRegistry serviceRegistry) {
-        int count = 0;
+        List<String> applied = new ArrayList<>();
         for (PersistentClass pc : metadata.getEntityBindings()) {
             Class<?> entityClass = pc.getMappedClass();
             if (entityClass == null) continue;
@@ -44,7 +45,7 @@ public class Hibernate5EnumStringIntegrator implements Integrator {
                         params.setProperty(org.hibernate.type.EnumType.ENUM, desc.getFieldType().getName());
                         params.setProperty(org.hibernate.type.EnumType.TYPE, String.valueOf(Types.VARCHAR));
                         simpleValue.setTypeParameters(params);
-                        count++;
+                        applied.add(desc.getEntityClass().getSimpleName() + "." + desc.getFieldName());
                     }
                 } catch (Exception e) {
                     log.warning("[jpa-auto-enum-string] Could not apply STRING mapping to "
@@ -52,8 +53,9 @@ public class Hibernate5EnumStringIntegrator implements Integrator {
                 }
             }
         }
-        if (count > 0) {
-            log.info("[jpa-auto-enum-string] Applied STRING mapping to " + count + " enum field(s).");
+        if (!applied.isEmpty()) {
+            log.info("[jpa-auto-enum-string] Applied STRING mapping to " + applied.size()
+                + " enum field(s): " + String.join(", ", applied));
         }
     }
 
