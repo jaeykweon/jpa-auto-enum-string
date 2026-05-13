@@ -40,7 +40,9 @@ public class EnumFieldScanner {
             if (name.equals("javax.persistence.Enumerated")
                 || name.equals("jakarta.persistence.Enumerated")
                 || name.equals("javax.persistence.Transient")
-                || name.equals("jakarta.persistence.Transient")) {
+                || name.equals("jakarta.persistence.Transient")
+                || name.equals("javax.persistence.Convert")
+                || name.equals("jakarta.persistence.Convert")) {
                 return true;
             }
         }

@@ -24,6 +24,9 @@ class AutoEnumStringIntegrationTest {
     ExternalOrderRepository externalOrderRepository;
 
     @Autowired
+    OrderWithConverterRepository orderWithConverterRepository;
+
+    @Autowired
     JdbcTemplate jdbcTemplate;
 
     @Test
@@ -57,6 +60,19 @@ class AutoEnumStringIntegrationTest {
 
         assertNotNull(rawValue);
         assertEquals(0, rawValue.intValue(), "PENDING is ordinal 0 — must stay as ordinal");
+    }
+
+    // @Convert is an explicit user decision to use a custom converter — the library must not override it.
+    // Here the converter stores OrderStatus as a single-character code (e.g. "C"), not as the enum name.
+    @Test
+    void convertAnnotatedField_isNotOverriddenByLibrary() {
+        orderWithConverterRepository.save(new OrderWithConverter(OrderStatus.CONFIRMED));
+
+        String rawValue = jdbcTemplate.queryForObject(
+            "SELECT status FROM orders_with_converter LIMIT 1", String.class
+        );
+
+        assertEquals("C", rawValue, "@Convert converter must remain in effect — not overridden by STRING mapping");
     }
 
     // ExternalOrder is in a sub-package outside the base package configured by @SpringBootApplication.
