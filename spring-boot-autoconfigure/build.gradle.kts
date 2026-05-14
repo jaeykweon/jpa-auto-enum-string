@@ -1,5 +1,9 @@
+plugins {
+    `java-library`
+}
+
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
     compileOnly(project(":hibernate5-adapter"))
     compileOnly(project(":hibernate6-adapter"))
 
