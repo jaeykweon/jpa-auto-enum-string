@@ -42,7 +42,8 @@ public class EnumFieldScanner {
                 || name.equals("javax.persistence.Transient")
                 || name.equals("jakarta.persistence.Transient")
                 || name.equals("javax.persistence.Convert")
-                || name.equals("jakarta.persistence.Convert")) {
+                || name.equals("jakarta.persistence.Convert")
+                || name.equals("org.hibernate.annotations.Type")) {
                 return true;
             }
         }

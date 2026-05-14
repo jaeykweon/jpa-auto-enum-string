@@ -27,6 +27,9 @@ class AutoEnumStringIntegrationTest {
     OrderWithConverterRepository orderWithConverterRepository;
 
     @Autowired
+    OrderWithTypeRepository orderWithTypeRepository;
+
+    @Autowired
     JdbcTemplate jdbcTemplate;
 
     @Test
@@ -73,6 +76,21 @@ class AutoEnumStringIntegrationTest {
         );
 
         assertEquals("C", rawValue, "@Convert converter must remain in effect — not overridden by STRING mapping");
+    }
+
+    // @Type is an explicit user decision to use a custom Hibernate type mapping — the library must not override it.
+    // org.hibernate.type.EnumType defaults to ordinal; if the library were to override it, it would store STRING instead.
+    @Test
+    void typeAnnotatedField_isNotOverriddenByLibrary() {
+        orderWithTypeRepository.save(new OrderWithType(OrderStatus.CONFIRMED));
+
+        Number rawValue = jdbcTemplate.queryForObject(
+            "SELECT status FROM orders_with_type LIMIT 1", Number.class
+        );
+
+        assertNotNull(rawValue);
+        assertEquals(1, rawValue.intValue(),
+            "@Type mapping must remain in effect — CONFIRMED is ordinal 1, not the string \"CONFIRMED\"");
     }
 
     // ExternalOrder is in a sub-package outside the base package configured by @SpringBootApplication.
