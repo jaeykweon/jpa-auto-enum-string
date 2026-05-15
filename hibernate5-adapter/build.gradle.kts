@@ -1,5 +1,9 @@
+plugins {
+    `java-library`
+}
+
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
     compileOnly("org.hibernate:hibernate-core:5.6.15.Final")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
