@@ -46,6 +46,11 @@ public class AutoEnumStringConfig {
         }
 
         public AutoEnumStringConfig build() {
+            for (String pkg : basePackages) {
+                if (pkg == null) {
+                    throw new IllegalArgumentException("basePackages must not contain null elements");
+                }
+            }
             return new AutoEnumStringConfig(this);
         }
     }

@@ -49,7 +49,7 @@ public class Hibernate5EnumStringIntegrator implements Integrator {
                     }
                 } catch (Exception e) {
                     log.warning("[jpa-auto-enum-string] Could not apply STRING mapping to "
-                        + desc.getEntityClass().getSimpleName() + "." + desc.getFieldName() + ": " + e.getMessage());
+                        + desc.getEntityClass().getSimpleName() + "." + desc.getFieldName() + ": " + e);
                 }
             }
         }

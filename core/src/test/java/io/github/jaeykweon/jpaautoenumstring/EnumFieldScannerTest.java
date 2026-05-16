@@ -1,5 +1,9 @@
 package io.github.jaeykweon.jpaautoenumstring;
 
+import jakarta.persistence.Convert;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Transient;
+import org.hibernate.annotations.Type;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -48,6 +52,42 @@ class EnumFieldScannerTest {
         assertEquals("status", result.get(0).getFieldName());
     }
 
+    @Test
+    void enumeratedAnnotatedField_isSkipped() {
+        EnumFieldScanner scanner = scannerWithNoPackageFilter();
+
+        List<EnumFieldDescriptor> result = scanner.scan(EntityWithEnumeratedEnum.class);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void convertAnnotatedField_isSkipped() {
+        EnumFieldScanner scanner = scannerWithNoPackageFilter();
+
+        List<EnumFieldDescriptor> result = scanner.scan(EntityWithConvertEnum.class);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void jpaTransientAnnotatedField_isSkipped() {
+        EnumFieldScanner scanner = scannerWithNoPackageFilter();
+
+        List<EnumFieldDescriptor> result = scanner.scan(EntityWithJpaTransientEnum.class);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void typeAnnotatedField_isSkipped() {
+        EnumFieldScanner scanner = scannerWithNoPackageFilter();
+
+        List<EnumFieldDescriptor> result = scanner.scan(EntityWithTypeEnum.class);
+
+        assertTrue(result.isEmpty());
+    }
+
     private EnumFieldScanner scannerWithNoPackageFilter() {
         return new EnumFieldScanner(AutoEnumStringConfig.builder().build());
     }
@@ -73,5 +113,25 @@ class EnumFieldScannerTest {
     }
 
     static class EntityWithInheritedEnum extends BaseEntity {
+    }
+
+    static class EntityWithEnumeratedEnum {
+        @Enumerated
+        private Status status;
+    }
+
+    static class EntityWithConvertEnum {
+        @Convert(converter = Object.class)
+        private Status status;
+    }
+
+    static class EntityWithJpaTransientEnum {
+        @Transient
+        private Status status;
+    }
+
+    static class EntityWithTypeEnum {
+        @Type("string")
+        private Status status;
     }
 }
