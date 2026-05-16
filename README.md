@@ -43,12 +43,14 @@ At application startup, the library hooks into Hibernate's initialization proces
 It scans entity classes in the configured packages, finds enum fields without an explicit `@Enumerated` annotation, and
 registers them as STRING type — the same result as adding `@Enumerated(EnumType.STRING)` to each field manually.
 
+This includes enum fields inside `@Embeddable` components.
+
 The startup log shows which fields were applied.
 
 ## Requirements
 
 - Java 8+
-- Hibernate 5 or 6
+- Hibernate 5.3+ or 6
 
 Spring Boot 2.1+ is required only when using the Spring Boot starter.
 
@@ -101,7 +103,7 @@ Only entity classes under the configured packages are affected. Third-party libr
 Add the adapter dependency for your Hibernate version:
 
 ```gradle
-// Hibernate 5
+// Hibernate 5.3+
 implementation 'io.github.jaeykweon:jpa-auto-enum-string-hibernate5-adapter:1.0.0'
 
 // Hibernate 6
@@ -112,7 +114,12 @@ For setup and configuration, see [Manual usage](#manual-usage-without-spring-boo
 
 ## Opting out
 
-Fields with an explicit `@Enumerated` annotation are always skipped — including `@Enumerated(EnumType.ORDINAL)`.
+The library skips a field if any of the following apply:
+
+- `@Enumerated` is present — the declared mapping is used as-is
+- `@Convert` is present — the custom converter takes precedence
+- Hibernate's `@Type` is present — the custom type mapping takes precedence
+- `@Transient` or Java's `transient` keyword — not a persistent field
 
 ```java
 @Entity
@@ -122,8 +129,23 @@ public class Order {
     @Enumerated(EnumType.ORDINAL)
     private LegacyStatus legacyStatus;   // explicit: stays as ORDINAL
 
+    @Convert(converter = StatusConverter.class)
+    private OrderStatus converted;       // custom converter: not overridden
+
     @Transient
     private OrderStatus tempStatus;      // transient: skipped
+}
+```
+
+The same rules apply inside `@Embeddable` components.
+
+```java
+@Embeddable
+public class ShippingInfo {
+    private OrderStatus status;          // auto: stored as STRING
+
+    @Enumerated(EnumType.ORDINAL)
+    private OrderStatus legacyStatus;    // explicit: stays as ORDINAL
 }
 ```
 
@@ -154,7 +176,7 @@ If you need to remove the library, add `@Enumerated(EnumType.STRING)` explicitly
 
 ## Manual usage (without Spring Boot)
 
-### Hibernate 5
+### Hibernate 5.3+
 
 ```gradle
 implementation 'io.github.jaeykweon:jpa-auto-enum-string-hibernate5-adapter:1.0.0'
@@ -234,6 +256,27 @@ This is what Lombok does, and Lombok developers spend significant effort maintai
 because these internal APIs change without notice.
 
 Hibernate itself operates at runtime, so in my opinion, runtime integration is the natural fit.
+
+**Why is Hibernate 5.3 the minimum, not 5.0?**
+
+Hibernate 5.0 and 5.1 did not include Java 8 type support in the core module — it required a separate
+`hibernate-java8` dependency. More practically, Hibernate 5.0/5.1 was the era of Spring Boot 1.4/1.5,
+which predates this library's Spring Boot minimum of 2.1.
+
+Hibernate 5.3 is what Spring Boot 2.1 ships with, so it is the earliest version that can be encountered
+in a supported environment.
+
+**Why is Spring Boot 2.1 the minimum?**
+
+The library works by registering a Hibernate `Integrator` via the `hibernate.integrator_provider` property.
+In a Spring Boot application, this property must be set before the `EntityManagerFactory` is created.
+
+Spring Boot 2.1 introduced `HibernatePropertiesCustomizer`, a callback that runs at exactly the right moment
+to inject this property. Spring Boot 2.0 does not have this callback, so there is no clean way to register
+the integrator through auto-configuration.
+
+Without Spring Boot, the adapters can be used directly with any Hibernate 5.3+ or 6 setup regardless of
+Spring Boot version.
 
 **Why not use Hibernate's `hibernate.type.prefer_native_enum_types` property?**
 
