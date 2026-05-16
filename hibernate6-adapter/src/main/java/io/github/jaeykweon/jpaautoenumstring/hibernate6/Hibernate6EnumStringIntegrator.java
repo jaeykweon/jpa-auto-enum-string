@@ -10,6 +10,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
@@ -38,15 +39,12 @@ public class Hibernate6EnumStringIntegrator implements Integrator {
             List<EnumFieldDescriptor> fields = scanner.scan(entityClass);
             for (EnumFieldDescriptor desc : fields) {
                 try {
-                    Property property = pc.getProperty(desc.getFieldName());
-                    if (property != null && property.getValue() instanceof BasicValue) {
-                        BasicValue basicValue = (BasicValue) property.getValue();
-                        applyStringMapping(basicValue);
-                        applied.add(desc.getEntityClass().getSimpleName() + "." + desc.getFieldName());
+                    if (applyStringMappingAlongPath(pc, desc.getPropertyPath())) {
+                        applied.add(desc.getEntityClass().getSimpleName() + "." + String.join(".", desc.getPropertyPath()));
                     }
                 } catch (Exception e) {
                     log.warning("[jpa-auto-enum-string] Could not apply STRING mapping to "
-                        + desc.getEntityClass().getSimpleName() + "." + desc.getFieldName() + ": " + e);
+                        + desc.getEntityClass().getSimpleName() + "." + String.join(".", desc.getPropertyPath()) + ": " + e);
                 }
             }
         }
@@ -54,6 +52,35 @@ public class Hibernate6EnumStringIntegrator implements Integrator {
             log.info("[jpa-auto-enum-string] Applied STRING mapping to " + applied.size()
                 + " enum field(s): " + String.join(", ", applied));
         }
+    }
+
+    /**
+     * Navigates the property path, applies STRING mapping to the leaf BasicValue, and clears
+     * the cached CompositeType on every intermediate Component.
+     */
+    private static boolean applyStringMappingAlongPath(PersistentClass pc, List<String> propertyPath) throws Exception {
+        Property property = pc.getProperty(propertyPath.get(0));
+        List<Component> components = new ArrayList<>();
+
+        for (int i = 1; i < propertyPath.size(); i++) {
+            if (!(property.getValue() instanceof Component)) return false;
+            Component component = (Component) property.getValue();
+            components.add(component);
+            property = component.getProperty(propertyPath.get(i));
+        }
+
+        if (!(property.getValue() instanceof BasicValue)) return false;
+        applyStringMapping((BasicValue) property.getValue());
+
+        // Clear Component.type (cached CompositeType) so Hibernate rebuilds it after our
+        // BasicValue change — otherwise INSERT/SELECT binding still uses the stale ordinal type.
+        Field componentTypeField = Component.class.getDeclaredField("type");
+        componentTypeField.setAccessible(true);
+        for (Component component : components) {
+            componentTypeField.set(component, null);
+        }
+
+        return true;
     }
 
     // In H6.4, BasicValue.resolution is null when the integrator runs (lazy), so

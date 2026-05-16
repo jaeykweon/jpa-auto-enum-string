@@ -1,11 +1,15 @@
 package io.github.jaeykweon.jpaautoenumstring;
 
 import jakarta.persistence.Convert;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Transient;
 import org.hibernate.annotations.Type;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -88,6 +92,45 @@ class EnumFieldScannerTest {
         assertTrue(result.isEmpty());
     }
 
+    @Test
+    void embeddedEnumField_isScanned_withFullPath() {
+        EnumFieldScanner scanner = scannerWithNoPackageFilter();
+
+        List<EnumFieldDescriptor> result = scanner.scan(EntityWithEmbeddable.class);
+
+        assertEquals(1, result.size());
+        assertEquals(Arrays.asList("address", "status"), result.get(0).getPropertyPath());
+        assertEquals("status", result.get(0).getFieldName());
+    }
+
+    @Test
+    void nestedEmbeddedEnumField_isScanned_withFullPath() {
+        EnumFieldScanner scanner = scannerWithNoPackageFilter();
+
+        List<EnumFieldDescriptor> result = scanner.scan(EntityWithNestedEmbeddable.class);
+
+        assertEquals(1, result.size());
+        assertEquals(Arrays.asList("contact", "address", "status"), result.get(0).getPropertyPath());
+    }
+
+    @Test
+    void embeddedEnumField_withSkipAnnotation_isSkipped() {
+        EnumFieldScanner scanner = scannerWithNoPackageFilter();
+
+        List<EnumFieldDescriptor> result = scanner.scan(EntityWithSkippedEmbeddedEnum.class);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void directEnumField_hasPropertyPath_withSingleElement() {
+        EnumFieldScanner scanner = scannerWithNoPackageFilter();
+
+        List<EnumFieldDescriptor> result = scanner.scan(EntityWithPlainEnum.class);
+
+        assertEquals(Arrays.asList("status"), result.get(0).getPropertyPath());
+    }
+
     private EnumFieldScanner scannerWithNoPackageFilter() {
         return new EnumFieldScanner(AutoEnumStringConfig.builder().build());
     }
@@ -133,5 +176,37 @@ class EnumFieldScannerTest {
     static class EntityWithTypeEnum {
         @Type("string")
         private Status status;
+    }
+
+    @Embeddable
+    static class Address {
+        private Status status;
+    }
+
+    static class EntityWithEmbeddable {
+        @Embedded
+        private Address address;
+    }
+
+    @Embeddable
+    static class Contact {
+        @Embedded
+        private Address address;
+    }
+
+    static class EntityWithNestedEmbeddable {
+        @Embedded
+        private Contact contact;
+    }
+
+    @Embeddable
+    static class AddressWithSkippedEnum {
+        @Enumerated
+        private Status status;
+    }
+
+    static class EntityWithSkippedEmbeddedEnum {
+        @Embedded
+        private AddressWithSkippedEnum address;
     }
 }
