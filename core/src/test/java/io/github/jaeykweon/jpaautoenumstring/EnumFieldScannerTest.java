@@ -3,7 +3,6 @@ package io.github.jaeykweon.jpaautoenumstring;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
-import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Transient;
 import org.hibernate.annotations.Type;

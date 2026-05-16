@@ -75,9 +75,7 @@ public class EnumFieldScanner {
         for (Annotation ann : field.getAnnotations()) {
             String name = ann.annotationType().getName();
             if (name.equals("javax.persistence.Embedded")
-                || name.equals("jakarta.persistence.Embedded")
-                || name.equals("javax.persistence.EmbeddedId")
-                || name.equals("jakarta.persistence.EmbeddedId")) {
+                || name.equals("jakarta.persistence.Embedded")) {
                 return true;
             }
         }
