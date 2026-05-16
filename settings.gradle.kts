@@ -6,5 +6,6 @@ include(
     "hibernate6-adapter",
     "spring-boot-autoconfigure",
     "spring-boot-starter",
-    "tests:integration"
+    "tests:integration",
+    "tests:integration-jakarta"
 )
