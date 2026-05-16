@@ -14,3 +14,11 @@ build/
 # CLAUDE
 .claude/
 CLAUDE.md
+
+# Local-only docs
+TODO.md
+APPROACH_COMPARISON.md
+ARCHITECTURE.md
+DONE.md
+LIBRARY_MANAGEMENT.md
+docs/how-it-works.md
