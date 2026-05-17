@@ -289,6 +289,27 @@ It is also marked as `@Incubating` (experimental) and was introduced in Hibernat
 codebases still run on Hibernate 5 and versions of Hibernate 6 below 6.5. This library is designed to be as broadly
 usable as possible, regardless of which Hibernate version is in use.
 
+## Known Limitations
+
+### `@Convert` fields with Hibernate 7 + H2 in tests
+
+When using Spring Boot 4 (Hibernate 7) with H2 as the in-memory test database, inserting into a table that has a `@Convert`-annotated enum field may fail with:
+
+```
+Check constraint invalid: "CONSTRAINT_N: ..."
+```
+
+Hibernate 7 generates a `CHECK` constraint for `@Convert` fields based on the converter's output values (e.g. `CHECK (status IN ('P','C','S','X'))`). H2 2.4.x contains a bug where it cannot evaluate this constraint form, causing the INSERT to fail.
+
+This is an H2-side regression ([H2 issue #4302](https://github.com/h2database/h2database/issues/4302)) fixed in [H2 PR #4311](https://github.com/h2database/h2database/pull/4311) (merged November 2025, not yet released as of H2 2.4.240).
+
+**This library is not involved** — the same error occurs without the library. `@Convert` fields are explicitly excluded from this library's processing (see [Opting out](#opting-out)).
+
+**Workarounds until H2 ships the fix:**
+
+- Downgrade H2 to 2.3.x in your test dependencies
+- Use a real database (e.g. PostgreSQL via Testcontainers) for integration tests
+
 ## License
 
 [MIT](LICENSE)

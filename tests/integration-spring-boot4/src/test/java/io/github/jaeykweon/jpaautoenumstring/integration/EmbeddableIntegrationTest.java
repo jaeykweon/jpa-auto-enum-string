@@ -1,9 +1,10 @@
 package io.github.jaeykweon.jpaautoenumstring.integration;
 
+import io.github.jaeykweon.jpaautoenumstring.autoconfigure.JpaAutoEnumStringAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
 
@@ -11,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @DataJpaTest
-@Import(TestHibernate7Config.class)
+@ImportAutoConfiguration(JpaAutoEnumStringAutoConfiguration.class)
 @TestPropertySource(properties = "spring.jpa.hibernate.ddl-auto=create-drop")
 class EmbeddableIntegrationTest {
 

@@ -1,42 +1,36 @@
-package io.github.jaeykweon.jpaautoenumstring.integration;
+package io.github.jaeykweon.jpaautoenumstring.autoconfigure;
 
 import io.github.jaeykweon.jpaautoenumstring.AutoEnumStringConfig;
 import io.github.jaeykweon.jpaautoenumstring.hibernate6.Hibernate6EnumStringIntegrator;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.hibernate.autoconfigure.HibernatePropertiesCustomizer;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Registers Hibernate6EnumStringIntegrator using Spring Boot 4's HibernatePropertiesCustomizer.
- *
- * In Spring Boot 4, HibernatePropertiesCustomizer moved to
- * org.springframework.boot.hibernate.autoconfigure — incompatible with the compiled
- * spring-boot-autoconfigure artifact (which targets Spring Boot 2/3).
- *
- * This configuration wires the adapter directly so the test validates H7 runtime
- * compatibility without depending on the spring-boot-autoconfigure module.
- */
-@TestConfiguration
-public class TestHibernate7Config {
+@Configuration(proxyBeanMethods = false)
+@ConditionalOnClass(name = {
+    "org.hibernate.mapping.BasicValue",
+    "io.github.jaeykweon.jpaautoenumstring.hibernate6.Hibernate6EnumStringIntegrator"
+})
+class Hibernate6Configuration {
 
-    @Bean
-    public AutoEnumStringConfig autoEnumStringConfig() {
-        return AutoEnumStringConfig.builder()
-                .basePackages("io.github.jaeykweon.jpaautoenumstring.integration")
-                .build();
+    private final AutoEnumStringConfig config;
+
+    Hibernate6Configuration(AutoEnumStringConfig config) {
+        this.config = config;
     }
 
     @Bean
-    public HibernatePropertiesCustomizer hibernate7EnumStringIntegratorCustomizer(AutoEnumStringConfig config) {
+    public HibernatePropertiesCustomizer hibernate6EnumStringIntegratorCustomizer() {
         return props -> {
             IntegratorProvider ourProvider = () -> Collections.singletonList(
-                    new Hibernate6EnumStringIntegrator(config)
+                new Hibernate6EnumStringIntegrator(config)
             );
             Object existing = props.get("hibernate.integrator_provider");
             if (existing instanceof IntegratorProvider) {
