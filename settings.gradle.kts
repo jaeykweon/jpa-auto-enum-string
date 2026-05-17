@@ -7,5 +7,6 @@ include(
     "spring-boot-autoconfigure",
     "spring-boot-starter",
     "tests:integration",
-    "tests:integration-jakarta"
+    "tests:integration-jakarta",
+    "tests:integration-spring-boot4"
 )
