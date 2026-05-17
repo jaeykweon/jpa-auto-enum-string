@@ -50,9 +50,15 @@ The startup log shows which fields were applied.
 ## Requirements
 
 - Java 8+
-- Hibernate 5.3+ or 6
+- Hibernate 5.3, 6, or 7
 
-Spring Boot 2.1+ is required only when using the Spring Boot starter.
+Spring Boot is required only when using the Spring Boot starter:
+
+| Starter | Spring Boot | Hibernate |
+|---|---|---|
+| `jpa-auto-enum-string-spring-boot2-starter` | 2.1 – 2.7 | 5.3 |
+| `jpa-auto-enum-string-spring-boot3-starter` | 3.x | 6 |
+| `jpa-auto-enum-string-spring-boot4-starter` | 4.x | 7 |
 
 The library can also be used without Spring Boot — see [Manual usage](#manual-usage-without-spring-boot).
 
@@ -60,22 +66,51 @@ The library can also be used without Spring Boot — see [Manual usage](#manual-
 
 ### Spring Boot
 
-Add the starter dependency:
+Add the starter for your Spring Boot version:
+
+**Spring Boot 2.x**
 
 ```gradle
-implementation 'io.github.jaeykweon:jpa-auto-enum-string-spring-boot-starter:1.0.0'
+implementation 'io.github.jaeykweon:jpa-auto-enum-string-spring-boot2-starter:1.0.0'
 ```
 
 ```xml
 <dependency>
     <groupId>io.github.jaeykweon</groupId>
-    <artifactId>jpa-auto-enum-string-spring-boot-starter</artifactId>
+    <artifactId>jpa-auto-enum-string-spring-boot2-starter</artifactId>
     <version>1.0.0</version>
 </dependency>
 ```
 
-No additional configuration needed. The library detects the Hibernate version automatically and scans the package of
-your `@SpringBootApplication` class.
+**Spring Boot 3.x**
+
+```gradle
+implementation 'io.github.jaeykweon:jpa-auto-enum-string-spring-boot3-starter:1.0.0'
+```
+
+```xml
+<dependency>
+    <groupId>io.github.jaeykweon</groupId>
+    <artifactId>jpa-auto-enum-string-spring-boot3-starter</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
+**Spring Boot 4.x**
+
+```gradle
+implementation 'io.github.jaeykweon:jpa-auto-enum-string-spring-boot4-starter:1.0.0'
+```
+
+```xml
+<dependency>
+    <groupId>io.github.jaeykweon</groupId>
+    <artifactId>jpa-auto-enum-string-spring-boot4-starter</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
+No additional configuration needed. The library scans the package of your `@SpringBootApplication` class automatically.
 
 To specify packages explicitly:
 
@@ -106,7 +141,7 @@ Add the adapter dependency for your Hibernate version:
 // Hibernate 5.3+
 implementation 'io.github.jaeykweon:jpa-auto-enum-string-hibernate5-adapter:1.0.0'
 
-// Hibernate 6
+// Hibernate 6 or 7
 implementation 'io.github.jaeykweon:jpa-auto-enum-string-hibernate6-adapter:1.0.0'
 ```
 
@@ -201,7 +236,7 @@ SessionFactory sessionFactory = new Configuration()
     .buildSessionFactory(bootstrapRegistry);
 ```
 
-### Hibernate 6
+### Hibernate 6 / 7
 
 ```gradle
 implementation 'io.github.jaeykweon:jpa-auto-enum-string-hibernate6-adapter:1.0.0'
@@ -266,7 +301,7 @@ which predates this library's Spring Boot minimum of 2.1.
 Hibernate 5.3 is what Spring Boot 2.1 ships with, so it is the earliest version that can be encountered
 in a supported environment.
 
-**Why is Spring Boot 2.1 the minimum?**
+**Why is Spring Boot 2.1 the minimum for the SB2 starter?**
 
 The library works by registering a Hibernate `Integrator` via the `hibernate.integrator_provider` property.
 In a Spring Boot application, this property must be set before the `EntityManagerFactory` is created.
@@ -275,7 +310,7 @@ Spring Boot 2.1 introduced `HibernatePropertiesCustomizer`, a callback that runs
 to inject this property. Spring Boot 2.0 does not have this callback, so there is no clean way to register
 the integrator through auto-configuration.
 
-Without Spring Boot, the adapters can be used directly with any Hibernate 5.3+ or 6 setup regardless of
+Without Spring Boot, the adapters can be used directly with any Hibernate 5.3+, 6, or 7 setup regardless of
 Spring Boot version.
 
 **Why not use Hibernate's `hibernate.type.prefer_native_enum_types` property?**

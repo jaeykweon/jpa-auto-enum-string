@@ -19,7 +19,7 @@ import java.util.List;
 @AutoConfigureBefore(HibernateJpaAutoConfiguration.class)
 @ConditionalOnClass(name = "org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean")
 @EnableConfigurationProperties(JpaAutoEnumStringProperties.class)
-@Import({Hibernate6Configuration.class, Hibernate5Configuration.class})
+@Import(Hibernate5Configuration.class)
 public class JpaAutoEnumStringAutoConfiguration {
 
     @Bean

@@ -14,10 +14,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnClass(name = {
-    "org.hibernate.mapping.BasicValue",
-    "io.github.jaeykweon.jpaautoenumstring.hibernate6.Hibernate6EnumStringIntegrator"
-})
+@ConditionalOnClass(name = "io.github.jaeykweon.jpaautoenumstring.hibernate6.Hibernate6EnumStringIntegrator")
 class Hibernate6Configuration {
 
     private final AutoEnumStringConfig config;

@@ -5,7 +5,6 @@ plugins {
 
 dependencies {
     api(project(":core"))
-    implementation(project(":spring-boot-autoconfigure"))
+    implementation(project(":spring-boot2-autoconfigure"))
     runtimeOnly(project(":hibernate5-adapter"))
-    runtimeOnly(project(":hibernate6-adapter"))
 }

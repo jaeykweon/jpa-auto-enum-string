@@ -5,7 +5,6 @@ import io.github.jaeykweon.jpaautoenumstring.hibernate5.Hibernate5EnumStringInte
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +15,6 @@ import java.util.List;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(name = "io.github.jaeykweon.jpaautoenumstring.hibernate5.Hibernate5EnumStringIntegrator")
-@ConditionalOnMissingClass("org.hibernate.mapping.BasicValue")
 class Hibernate5Configuration {
 
     private final AutoEnumStringConfig config;
