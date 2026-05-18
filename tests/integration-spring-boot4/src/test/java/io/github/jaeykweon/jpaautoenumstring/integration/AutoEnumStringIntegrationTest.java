@@ -20,6 +20,7 @@ class AutoEnumStringIntegrationTest {
 
     @Autowired OrderRepository orderRepository;
     @Autowired OrderWithConverterRepository orderWithConverterRepository;
+    @Autowired OrderWithTypeRepository orderWithTypeRepository;
     @Autowired ExternalOrderRepository externalOrderRepository;
     @Autowired JdbcTemplate jdbcTemplate;
 
@@ -54,6 +55,21 @@ class AutoEnumStringIntegrationTest {
 
         assertNotNull(rawValue);
         assertEquals(0, rawValue.intValue(), "PENDING is ordinal 0 — must stay as ordinal");
+    }
+
+    // @Type is an explicit user decision to use a custom Hibernate type mapping — the library must not override it.
+    // OrdinalOrderStatusType stores OrderStatus as an integer ordinal; if the library overrode it, it would store STRING.
+    @Test
+    void typeAnnotatedField_isNotOverriddenByLibrary() {
+        orderWithTypeRepository.save(new OrderWithType(OrderStatus.CONFIRMED));
+
+        Number rawValue = jdbcTemplate.queryForObject(
+            "SELECT status FROM orders_with_type LIMIT 1", Number.class
+        );
+
+        assertNotNull(rawValue);
+        assertEquals(1, rawValue.intValue(),
+            "@Type mapping must remain in effect — CONFIRMED is ordinal 1, not the string \"CONFIRMED\"");
     }
 
     // @Convert is an explicit user decision to use a custom converter — the library must not override it.
