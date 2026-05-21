@@ -8,7 +8,7 @@ java {
 }
 
 dependencies {
-    api(project(":core"))
+    implementation(project(":core"))
     compileOnly(project(":hibernate6-adapter"))
 
     compileOnly(platform("org.springframework.boot:spring-boot-dependencies:3.3.4"))

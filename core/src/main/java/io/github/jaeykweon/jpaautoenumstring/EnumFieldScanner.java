@@ -23,7 +23,7 @@ public class EnumFieldScanner {
             return Collections.emptyList();
         }
         List<EnumFieldDescriptor> result = new ArrayList<>();
-        scanClassHierarchy(entityClass, entityClass, Collections.<String>emptyList(), result, new HashSet<Class<?>>());
+        scanClassHierarchy(entityClass, entityClass, Collections.emptyList(), result, new HashSet<>());
         return result;
     }
 

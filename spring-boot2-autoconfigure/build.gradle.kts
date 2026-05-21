@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    api(project(":core"))
+    implementation(project(":core"))
     compileOnly(project(":hibernate5-adapter"))
 
     compileOnly(platform("org.springframework.boot:spring-boot-dependencies:2.7.18"))
