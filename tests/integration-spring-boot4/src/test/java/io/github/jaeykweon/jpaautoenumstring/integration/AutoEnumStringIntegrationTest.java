@@ -12,6 +12,7 @@ import org.springframework.test.context.TestPropertySource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @DataJpaTest
 @ImportAutoConfiguration(JpaAutoEnumStringAutoConfiguration.class)
@@ -22,6 +23,7 @@ class AutoEnumStringIntegrationTest {
     @Autowired OrderWithConverterRepository orderWithConverterRepository;
     @Autowired OrderWithTypeRepository orderWithTypeRepository;
     @Autowired ExternalOrderRepository externalOrderRepository;
+    @Autowired OrderWithMultipleStatusesRepository orderWithMultipleStatusesRepository;
     @Autowired JdbcTemplate jdbcTemplate;
 
     @Test
@@ -88,6 +90,41 @@ class AutoEnumStringIntegrationTest {
         );
 
         assertEquals("C", rawValue, "@Convert converter must remain in effect — not overridden by STRING mapping");
+    }
+
+    @Test
+    void nullEnumField_isStoredAsNull() {
+        orderRepository.save(new Order("Order with no status", null));
+
+        String rawValue = jdbcTemplate.queryForObject(
+            "SELECT status FROM orders LIMIT 1", String.class
+        );
+
+        assertNull(rawValue, "Null enum should be stored as NULL in the database");
+    }
+
+    @Test
+    void nullEnumField_isReadBackAsNull() {
+        orderRepository.save(new Order("Order with no status", null));
+
+        Order found = orderRepository.findAll().get(0);
+
+        assertNull(found.getStatus(), "Null enum should be read back as null");
+    }
+
+    // Verifies that the library applies STRING mapping to all unannotated enum fields in an entity, not just the first.
+    @Test
+    void multipleUnannotatedEnumFields_areAllSavedAsString() {
+        orderWithMultipleStatusesRepository.save(
+            new OrderWithMultipleStatuses(OrderStatus.CONFIRMED, OrderStatus.SHIPPED));
+
+        String primaryRaw = jdbcTemplate.queryForObject(
+            "SELECT primary_status FROM orders_with_multiple_statuses LIMIT 1", String.class);
+        String secondaryRaw = jdbcTemplate.queryForObject(
+            "SELECT secondary_status FROM orders_with_multiple_statuses LIMIT 1", String.class);
+
+        assertEquals("CONFIRMED", primaryRaw, "First enum field should be stored as STRING");
+        assertEquals("SHIPPED", secondaryRaw, "Second enum field should be stored as STRING");
     }
 
     // ExternalOrder is in a sub-package outside the base package configured by @SpringBootApplication.
