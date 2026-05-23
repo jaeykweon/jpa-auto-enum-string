@@ -124,7 +124,7 @@ jpa:
     base-packages: com.example.myapp
 ```
 
-If your entities live in a separate Gradle/Maven module, see [examples/multi-module-app](examples/multi-module-app/).
+If your entities live in a separate Gradle/Maven module, see [examples/multi-module](examples/multi-module/app/).
 
 Only entity classes under the configured packages are affected. Third-party library entities are never touched.
 

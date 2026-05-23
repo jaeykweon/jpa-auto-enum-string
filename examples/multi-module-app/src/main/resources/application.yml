@@ -1,4 +1,0 @@
-jpa:
-  auto-enum-string:
-    base-packages:
-      - com.example.domain

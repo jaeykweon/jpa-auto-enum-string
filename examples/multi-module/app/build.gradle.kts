@@ -7,7 +7,8 @@ val springBootVersion = "3.3.4"
 
 dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:$springBootVersion"))
-    testImplementation(project(":examples:multi-module-domain"))
+    compileOnly("org.springframework.boot:spring-boot-autoconfigure")
+    testImplementation(project(":examples:multi-module:domain"))
     testImplementation(project(":spring-boot3-starter"))
     testImplementation(project(":spring-boot3-autoconfigure"))
     testImplementation("org.springframework.boot:spring-boot-starter-data-jpa")

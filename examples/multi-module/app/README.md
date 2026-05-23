@@ -5,17 +5,15 @@ Demonstrates how to use `jpa-auto-enum-string` when entities live in a separate 
 ## Module structure
 
 ```
-examples/
-├── multi-module-domain/   ← entities live here (com.example.domain)
+examples/multi-module/
+├── domain/   ← entities live here (com.example.domain)
 │   └── src/main/java/com/example/domain/
 │       ├── Order.java
 │       └── OrderStatus.java
 │
-└── multi-module-app/      ← Spring Boot app lives here (com.example.app)
+└── app/      ← Spring Boot app lives here (com.example.app)
     ├── src/main/java/com/example/app/
-    │   └── MyApplication.java
-    ├── src/main/resources/
-    │   └── application.yml
+    │   └── MyApplication.java   ← includes application.yml config in comments
     └── src/test/java/com/example/app/
         ├── WithoutBasePackagesConfigTest.java
         └── WithBasePackagesConfigTest.java
@@ -86,5 +84,5 @@ only the dependency name and JPA import package differ:
 Run with:
 
 ```bash
-./gradlew :examples:multi-module-app:test
+./gradlew :examples:multi-module:app:test
 ```

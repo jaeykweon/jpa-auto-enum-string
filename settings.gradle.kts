@@ -13,8 +13,8 @@ include(
     "tests:integration-spring-boot2",
     "tests:integration-spring-boot3",
     "tests:integration-spring-boot4",
-    "examples:multi-module-domain",
-    "examples:multi-module-app",
+    "examples:multi-module:domain",
+    "examples:multi-module:app",
     "examples:hibernate5-manual",
     "examples:hibernate6-manual"
 )
