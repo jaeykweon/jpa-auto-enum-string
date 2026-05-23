@@ -51,20 +51,30 @@ On startup, the library logs which fields were applied:
 [jpa-auto-enum-string] Applied STRING mapping to 2 enum field(s): Order.status, Order.paymentMethod
 ```
 
+If a field cannot be mapped, a warning is logged and the field is skipped — the application continues to start normally. The field will retain its default Hibernate behavior (ORDINAL) rather than failing the startup.
+
+```
+WARNING [jpa-auto-enum-string] Could not apply STRING mapping to Order.status: ...
+```
+
 ## Requirements
 
 - Java 8+
-- Hibernate 5.3, 6, or 7
+- Hibernate 5.3+
 
 Spring Boot is required only when using the Spring Boot starter:
 
 | Starter | Spring Boot | Hibernate |
 |---|---|---|
-| `jpa-auto-enum-string-spring-boot2-starter` | 2.1 – 2.7 | 5.3 |
-| `jpa-auto-enum-string-spring-boot3-starter` | 3.x | 6 |
-| `jpa-auto-enum-string-spring-boot4-starter` | 4.x | 7 |
+| `jpa-auto-enum-string-spring-boot2-starter` | 2.1 – 2.7 | 5.3.x |
+| `jpa-auto-enum-string-spring-boot3-starter` | 3.x | 6.x |
+| `jpa-auto-enum-string-spring-boot4-starter` | 4.x | 7.x |
 
 The library can also be used without Spring Boot — see [Manual usage](#manual-usage-without-spring-boot).
+
+New Spring Boot and Hibernate versions will be supported as they are released. If a version you need is not yet listed, please open an [issue](https://github.com/jaeykweon/jpa-auto-enum-string/issues).
+
+Integration tests covering Hibernate 5, 6, and 7 are included in the repository.
 
 ## Getting Started
 
@@ -114,9 +124,11 @@ implementation 'io.github.jaeykweon:jpa-auto-enum-string-spring-boot4-starter:1.
 </dependency>
 ```
 
-No additional configuration needed. The library scans the package of your `@SpringBootApplication` class automatically.
+No additional configuration needed. The library scans the package of your `@SpringBootApplication` class and all sub-packages automatically.
 
-To specify packages explicitly (sub-packages are included automatically):
+> ⚠️ **Adding to an existing project?** Read the [Warning section](#️-warning-do-not-add-to-existing-projects-without-a-data-migration) before proceeding.
+
+`base-packages` configuration is only needed when your entities live outside the `@SpringBootApplication` package — most commonly in a separate Gradle/Maven module:
 
 ```yaml
 jpa:
@@ -124,9 +136,11 @@ jpa:
     base-packages: com.example.myapp
 ```
 
-If your entities live in a separate Gradle/Maven module, see [examples/multi-module](examples/multi-module/app/).
+If your entities live in a separate Gradle/Maven module, see [examples/multi-module](examples/multi-module/app/) for the full setup.
 
 Only entity classes under the configured packages are affected. Third-party library entities are never touched.
+
+If you add the wrong starter for your Spring Boot version (e.g. the SB2 starter with Spring Boot 3), the mismatched Hibernate integrator will cause application startup to fail. Check the [Requirements](#requirements) table to confirm the correct starter for your Spring Boot version.
 
 ### Without Spring Boot
 
@@ -200,7 +214,13 @@ adding this library will cause mapping failures at runtime — existing records 
 **Removing the library after it has been applied is also risky.**
 
 Once enum values are stored as strings in the database, removing this library causes Hibernate to fall back to
-`ORDINAL` — and string-stored values will no longer be readable.
+`ORDINAL` — and string-stored values will no longer be readable. The error looks like:
+
+```
+org.springframework.dao.DataIntegrityViolationException:
+  Could not extract column from JDBC ResultSet
+  [Data conversion error converting "CONFIRMED"]
+```
 
 If you need to remove the library, add `@Enumerated(EnumType.STRING)` explicitly to all enum fields first.
 
@@ -223,6 +243,16 @@ implementation 'io.github.jaeykweon:jpa-auto-enum-string-hibernate6-adapter:1.0.
 See [examples/hibernate6-manual](examples/hibernate6-manual/) for a complete setup example.
 
 ## FAQ
+
+**Does this work with Lombok?**
+
+Yes. Lombok annotations (`@Builder`, `@NoArgsConstructor`, `@Getter`, etc.) coexist with this library without any issues.
+The library reads annotations directly from fields — Lombok-generated methods are not involved.
+
+**Does this apply to `@ElementCollection` enum fields?**
+
+No. `@ElementCollection` fields are not entity fields and are not processed by this library.
+If you need STRING mapping for enum values in an element collection, use `@Enumerated(EnumType.STRING)` explicitly on that field.
 
 **Why not use `AttributeConverter`?**
 
@@ -289,6 +319,8 @@ fields — the library may not detect those opt-out annotations and could apply 
 
 Field-based access (the Spring Boot convention, where `@Id` is on the field) is fully supported.
 
+Property-based access is uncommon in Spring Boot projects, so this is not currently supported. If you need it, please [open an issue](https://github.com/jaeykweon/jpa-auto-enum-string/issues).
+
 ### `@Convert` fields with Hibernate 7 + H2 in tests
 
 When using Spring Boot 4 (Hibernate 7) with H2 as the in-memory test database, inserting into a table that has a `@Convert`-annotated enum field may fail with:
@@ -311,3 +343,7 @@ This is an H2-side regression ([H2 issue #4302](https://github.com/h2database/h2
 ## License
 
 [MIT](LICENSE)
+
+## Issues
+
+Bug reports and questions are welcome via [GitHub Issues](https://github.com/jaeykweon/jpa-auto-enum-string/issues).
