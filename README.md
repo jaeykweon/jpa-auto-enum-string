@@ -1,6 +1,6 @@
 # jpa-auto-enum-string
 
-Eliminates `@Enumerated(EnumType.STRING)` boilerplate from every JPA enum field.
+**Eliminates `@Enumerated(EnumType.STRING)` boilerplate from every JPA enum field.**
 
 In typical JPA applications, `EnumType.STRING` is the standard choice for enum persistence
 — it stores readable string values instead of fragile ordinals.
@@ -43,9 +43,13 @@ At application startup, the library hooks into Hibernate's initialization proces
 It scans entity classes in the configured packages, finds enum fields without an explicit `@Enumerated` annotation, and
 registers them as STRING type — the same result as adding `@Enumerated(EnumType.STRING)` to each field manually.
 
-This includes enum fields inside `@Embeddable` components.
+This includes enum fields inside `@Embeddable` components and fields inherited from `@MappedSuperclass`.
 
-The startup log shows which fields were applied.
+On startup, the library logs which fields were applied:
+
+```
+[jpa-auto-enum-string] Applied STRING mapping to 2 enum field(s): Order.status, Order.paymentMethod
+```
 
 ## Requirements
 
@@ -112,7 +116,7 @@ implementation 'io.github.jaeykweon:jpa-auto-enum-string-spring-boot4-starter:1.
 
 No additional configuration needed. The library scans the package of your `@SpringBootApplication` class automatically.
 
-To specify packages explicitly:
+To specify packages explicitly (sub-packages are included automatically):
 
 ```yaml
 jpa:
@@ -120,16 +124,7 @@ jpa:
     base-packages: com.example.myapp
 ```
 
-In a multi-module project where entities are spread across multiple modules, list all packages:
-
-```yaml
-jpa:
-  auto-enum-string:
-    base-packages:
-      - com.example.myapp.order
-      - com.example.myapp.payment
-      - com.example.myapp.delivery
-```
+If your entities live in a separate Gradle/Maven module, see [examples/multi-module-app](examples/multi-module-app/).
 
 Only entity classes under the configured packages are affected. Third-party library entities are never touched.
 
@@ -217,24 +212,7 @@ If you need to remove the library, add `@Enumerated(EnumType.STRING)` explicitly
 implementation 'io.github.jaeykweon:jpa-auto-enum-string-hibernate5-adapter:1.0.0'
 ```
 
-```java
-import org.hibernate.SessionFactory;
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.cfg.Configuration;
-
-AutoEnumStringConfig config = AutoEnumStringConfig.builder()
-    .basePackages("com.example.myapp")
-    .build();
-
-BootstrapServiceRegistry bootstrapRegistry = new BootstrapServiceRegistryBuilder()
-    .applyIntegrator(new Hibernate5EnumStringIntegrator(config))
-    .build();
-
-SessionFactory sessionFactory = new Configuration()
-    .addAnnotatedClass(Order.class)  // register your entity classes
-    .buildSessionFactory(bootstrapRegistry);
-```
+See [examples/hibernate5-manual](examples/hibernate5-manual/) for a complete setup example.
 
 ### Hibernate 6 / 7
 
@@ -242,31 +220,7 @@ SessionFactory sessionFactory = new Configuration()
 implementation 'io.github.jaeykweon:jpa-auto-enum-string-hibernate6-adapter:1.0.0'
 ```
 
-```java
-import java.util.Collections;
-import org.hibernate.SessionFactory;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.boot.spi.IntegratorProvider;
-
-AutoEnumStringConfig config = AutoEnumStringConfig.builder()
-    .basePackages("com.example.myapp")
-    .build();
-
-StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
-    .applySetting(AvailableSettings.INTEGRATOR_PROVIDER,
-        (IntegratorProvider) () -> Collections.singletonList(
-            new Hibernate6EnumStringIntegrator(config)
-        ))
-    .build();
-
-SessionFactory sessionFactory = new MetadataSources(registry)
-    .addAnnotatedClass(Order.class)  // register your entity classes
-    .buildMetadata()
-    .buildSessionFactory();
-```
+See [examples/hibernate6-manual](examples/hibernate6-manual/) for a complete setup example.
 
 ## FAQ
 
@@ -325,6 +279,15 @@ codebases still run on Hibernate 5 and versions of Hibernate 6 below 6.5. This l
 usable as possible, regardless of which Hibernate version is in use.
 
 ## Known Limitations
+
+### Property-based access (annotations on getter methods)
+
+The library reads opt-out annotations (`@Enumerated`, `@Convert`, `@Type`) from **fields**, not from getter methods.
+
+If your entity uses property-based access — where `@Id` and other JPA annotations are placed on getters instead of
+fields — the library may not detect those opt-out annotations and could apply STRING mapping unexpectedly.
+
+Field-based access (the Spring Boot convention, where `@Id` is on the field) is fully supported.
 
 ### `@Convert` fields with Hibernate 7 + H2 in tests
 
