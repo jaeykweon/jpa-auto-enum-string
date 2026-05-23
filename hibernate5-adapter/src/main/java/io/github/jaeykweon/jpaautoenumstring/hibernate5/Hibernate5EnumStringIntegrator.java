@@ -38,13 +38,14 @@ public class Hibernate5EnumStringIntegrator implements Integrator {
             if (entityClass == null) continue;
             List<EnumFieldDescriptor> fields = scanner.scan(entityClass);
             for (EnumFieldDescriptor desc : fields) {
+                String fieldRef = desc.getEntityClass().getSimpleName() + "." + String.join(".", desc.getPropertyPath());
                 try {
                     if (applyStringMappingAlongPath(pc, desc.getPropertyPath(), desc.getFieldType())) {
-                        applied.add(desc.getEntityClass().getSimpleName() + "." + String.join(".", desc.getPropertyPath()));
+                        applied.add(fieldRef);
                     }
                 } catch (Exception e) {
-                    log.warning("[jpa-auto-enum-string] Could not apply STRING mapping to "
-                        + desc.getEntityClass().getSimpleName() + "." + String.join(".", desc.getPropertyPath()) + ": " + e);
+                    throw new IllegalStateException(
+                        "[jpa-auto-enum-string] Failed to apply STRING mapping to " + fieldRef, e);
                 }
             }
         }

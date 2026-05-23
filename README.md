@@ -2,8 +2,13 @@
 
 **Eliminates `@Enumerated(EnumType.STRING)` boilerplate from every JPA enum field.**
 
-In typical JPA applications, `EnumType.STRING` is the standard choice for enum persistence
-— it stores readable string values instead of fragile ordinals.
+In typical JPA applications, `EnumType.STRING` is the standard choice for enum persistence.
+
+With the default `ORDINAL` mapping, Hibernate stores enum values as integers (`0`, `1`, `2`, ...).
+
+This means adding a new value in the middle of an enum — or reordering existing values — silently corrupts existing data.
+
+`EnumType.STRING` stores the enum name instead, so the database is unaffected by enum reordering or additions.
 
 But it has to be declared manually on every single enum field.
 
@@ -51,10 +56,10 @@ On startup, the library logs which fields were applied:
 [jpa-auto-enum-string] Applied STRING mapping to 2 enum field(s): Order.status, Order.paymentMethod
 ```
 
-If a field cannot be mapped, a warning is logged and the field is skipped — the application continues to start normally. The field will retain its default Hibernate behavior (ORDINAL) rather than failing the startup.
+If a field cannot be mapped, the application fails to start with a clear error message identifying the field:
 
 ```
-WARNING [jpa-auto-enum-string] Could not apply STRING mapping to Order.status: ...
+IllegalStateException: [jpa-auto-enum-string] Failed to apply STRING mapping to Order.status
 ```
 
 ## Requirements
@@ -226,10 +231,18 @@ If you need to remove the library, add `@Enumerated(EnumType.STRING)` explicitly
 
 ## Manual usage (without Spring Boot)
 
+> ⚠️ **Always specify `basePackages`** when configuring the library manually. Without it, the library scans all entity classes it can find — including entities from third-party libraries. Pass the root package of your own entities to limit the scope.
+
 ### Hibernate 5.3+
 
 ```gradle
 implementation 'io.github.jaeykweon:jpa-auto-enum-string-hibernate5-adapter:1.0.0'
+```
+
+```java
+AutoEnumStringConfig config = AutoEnumStringConfig.builder()
+    .basePackages("com.example.myapp")  // required: your entity root package
+    .build();
 ```
 
 See [examples/hibernate5-manual](examples/hibernate5-manual/) for a complete setup example.
@@ -238,6 +251,12 @@ See [examples/hibernate5-manual](examples/hibernate5-manual/) for a complete set
 
 ```gradle
 implementation 'io.github.jaeykweon:jpa-auto-enum-string-hibernate6-adapter:1.0.0'
+```
+
+```java
+AutoEnumStringConfig config = AutoEnumStringConfig.builder()
+    .basePackages("com.example.myapp")  // required: your entity root package
+    .build();
 ```
 
 See [examples/hibernate6-manual](examples/hibernate6-manual/) for a complete setup example.
