@@ -89,42 +89,42 @@ Add the starter for your Spring Boot version:
 **Spring Boot 2.x**
 
 ```gradle
-implementation 'io.github.jaeykweon:jpa-auto-enum-string-spring-boot2-starter:1.0.0'
+implementation 'io.github.jaeykweon:jpa-auto-enum-string-spring-boot2-starter:{version}'
 ```
 
 ```xml
 <dependency>
     <groupId>io.github.jaeykweon</groupId>
     <artifactId>jpa-auto-enum-string-spring-boot2-starter</artifactId>
-    <version>1.0.0</version>
+    <version>{version}</version>
 </dependency>
 ```
 
 **Spring Boot 3.x**
 
 ```gradle
-implementation 'io.github.jaeykweon:jpa-auto-enum-string-spring-boot3-starter:1.0.0'
+implementation 'io.github.jaeykweon:jpa-auto-enum-string-spring-boot3-starter:{version}'
 ```
 
 ```xml
 <dependency>
     <groupId>io.github.jaeykweon</groupId>
     <artifactId>jpa-auto-enum-string-spring-boot3-starter</artifactId>
-    <version>1.0.0</version>
+    <version>{version}</version>
 </dependency>
 ```
 
 **Spring Boot 4.x**
 
 ```gradle
-implementation 'io.github.jaeykweon:jpa-auto-enum-string-spring-boot4-starter:1.0.0'
+implementation 'io.github.jaeykweon:jpa-auto-enum-string-spring-boot4-starter:{version}'
 ```
 
 ```xml
 <dependency>
     <groupId>io.github.jaeykweon</groupId>
     <artifactId>jpa-auto-enum-string-spring-boot4-starter</artifactId>
-    <version>1.0.0</version>
+    <version>{version}</version>
 </dependency>
 ```
 
@@ -247,7 +247,7 @@ org.springframework.dao.DataIntegrityViolationException:
 ### Hibernate 5.3+
 
 ```gradle
-implementation 'io.github.jaeykweon:jpa-auto-enum-string-hibernate5-adapter:1.0.0'
+implementation 'io.github.jaeykweon:jpa-auto-enum-string-hibernate5-adapter:{version}'
 ```
 
 ```java
@@ -266,7 +266,7 @@ See [examples/hibernate5-manual](examples/hibernate5-manual/) for a complete set
 ### Hibernate 6 / 7
 
 ```gradle
-implementation 'io.github.jaeykweon:jpa-auto-enum-string-hibernate6-adapter:1.0.0'
+implementation 'io.github.jaeykweon:jpa-auto-enum-string-hibernate6-adapter:{version}'
 ```
 
 ```java

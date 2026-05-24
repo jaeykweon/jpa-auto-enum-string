@@ -3,6 +3,7 @@ package io.github.jaeykweon.jpaautoenumstring;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AutoEnumStringConfigTest {
@@ -43,6 +44,20 @@ class AutoEnumStringConfigTest {
             .build();
 
         assertFalse(config.isInBasePackage(com.example.myappservice.Dummy.class));
+    }
+
+    @Test
+    void nullBasePackage_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () ->
+            AutoEnumStringConfig.builder().basePackages((String) null).build()
+        );
+    }
+
+    @Test
+    void emptyStringBasePackage_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () ->
+            AutoEnumStringConfig.builder().basePackages("").build()
+        );
     }
 
     @Test

@@ -55,10 +55,6 @@ public class EnumFieldScanner {
         }
     }
 
-    public boolean isSkipped(Field field) {
-        return shouldSkip(field);
-    }
-
     // Returns the element enum type for a parameterized collection field (e.g. Set<OrderStatus> → OrderStatus),
     // or null if the field is a raw type, has multiple type args, or the element is not an enum.
     public static Class<?> extractCollectionElementEnumType(Field field) {
@@ -71,7 +67,7 @@ public class EnumFieldScanner {
         return elementType.isEnum() ? elementType : null;
     }
 
-    private boolean shouldSkip(Field field) {
+    public boolean shouldSkip(Field field) {
         int mod = field.getModifiers();
         if (Modifier.isStatic(mod) || Modifier.isTransient(mod)) return true;
         for (Annotation ann : field.getAnnotations()) {

@@ -1,5 +1,18 @@
 plugins {
     `java-library`
+    id("com.vanniktech.maven.publish")
+}
+
+mavenPublishing {
+    coordinates(
+        groupId = project.group.toString(),
+        artifactId = "jpa-auto-enum-string-core",
+        version = project.version.toString()
+    )
+    pom {
+        name.set("JPA Auto Enum String - Core")
+        description.set("Core scanning logic for jpa-auto-enum-string")
+    }
 }
 
 dependencies {

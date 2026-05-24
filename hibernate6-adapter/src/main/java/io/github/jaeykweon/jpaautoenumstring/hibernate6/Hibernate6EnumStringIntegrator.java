@@ -83,7 +83,7 @@ public class Hibernate6EnumStringIntegrator implements Integrator {
 
             if (collection.getElement() instanceof BasicValue) {
                 BasicValue element = (BasicValue) collection.getElement();
-                if (scanner.isSkipped(field)) continue;
+                if (scanner.shouldSkip(field)) continue;
                 Class<?> elementType = EnumFieldScanner.extractCollectionElementEnumType(field);
                 if (elementType == null) continue;
                 String fieldRef = ownerClass.getSimpleName() + "." + fieldName + "[]";
@@ -118,7 +118,7 @@ public class Hibernate6EnumStringIntegrator implements Integrator {
             } catch (NoSuchFieldException e) {
                 continue;
             }
-            if (scanner.isSkipped(embeddableField)) continue;
+            if (scanner.shouldSkip(embeddableField)) continue;
             if (!embeddableField.getType().isEnum()) continue;
             String fieldRef = ownerClass.getSimpleName() + "." + fieldName + "[]." + prop.getName();
             try {
