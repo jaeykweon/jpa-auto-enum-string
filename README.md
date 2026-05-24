@@ -56,7 +56,7 @@ On startup, the library logs which fields were applied:
 [jpa-auto-enum-string] Applied STRING mapping to 2 enum field(s): Order.status, Order.paymentMethod
 ```
 
-If a field cannot be mapped, the application fails to start with a clear error message identifying the field:
+**If a field cannot be mapped, the application fails to start with a clear error message identifying the field:**
 
 ```
 IllegalStateException: [jpa-auto-enum-string] Failed to apply STRING mapping to Order.status
@@ -69,17 +69,15 @@ IllegalStateException: [jpa-auto-enum-string] Failed to apply STRING mapping to 
 
 Spring Boot is required only when using the Spring Boot starter:
 
-| Starter | Spring Boot | Hibernate |
-|---|---|---|
-| `jpa-auto-enum-string-spring-boot2-starter` | 2.1 – 2.7 | 5.3.x |
-| `jpa-auto-enum-string-spring-boot3-starter` | 3.x | 6.x |
-| `jpa-auto-enum-string-spring-boot4-starter` | 4.x | 7.x |
+| Starter                                     | Spring Boot | Hibernate | Tests                                                       |
+|---------------------------------------------|-------------|-----------|-------------------------------------------------------------|
+| `jpa-auto-enum-string-spring-boot2-starter` | 2.1 – 2.7   | 5.3.x     | [integration-spring-boot2](tests/integration-spring-boot2/) |
+| `jpa-auto-enum-string-spring-boot3-starter` | 3.x         | 6.x       | [integration-spring-boot3](tests/integration-spring-boot3/) |
+| `jpa-auto-enum-string-spring-boot4-starter` | 4.x         | 7.x       | [integration-spring-boot4](tests/integration-spring-boot4/) |
 
 The library can also be used without Spring Boot — see [Manual usage](#manual-usage-without-spring-boot).
 
-New Spring Boot and Hibernate versions will be supported as they are released. If a version you need is not yet listed, please open an [issue](https://github.com/jaeykweon/jpa-auto-enum-string/issues).
-
-Integration tests covering Hibernate 5, 6, and 7 are included in the repository.
+New Spring Boot and Hibernate versions will be supported as they are released.
 
 ## Getting Started
 
@@ -147,20 +145,6 @@ Only entity classes under the configured packages are affected. Third-party libr
 
 If you add the wrong starter for your Spring Boot version (e.g. the SB2 starter with Spring Boot 3), the mismatched Hibernate integrator will cause application startup to fail. Check the [Requirements](#requirements) table to confirm the correct starter for your Spring Boot version.
 
-### Without Spring Boot
-
-Add the adapter dependency for your Hibernate version:
-
-```gradle
-// Hibernate 5.3+
-implementation 'io.github.jaeykweon:jpa-auto-enum-string-hibernate5-adapter:1.0.0'
-
-// Hibernate 6 or 7
-implementation 'io.github.jaeykweon:jpa-auto-enum-string-hibernate6-adapter:1.0.0'
-```
-
-For setup and configuration, see [Manual usage](#manual-usage-without-spring-boot).
-
 ## Opting out
 
 The library skips a field if any of the following apply:
@@ -216,18 +200,15 @@ adding this library will cause mapping failures at runtime — existing records 
 2. Migrate integer values to string values (`0` → `'PENDING'`, `1` → `'COMPLETED'`, ...)
 3. Then add this library
 
-**Removing the library after it has been applied is also risky.**
+**To remove this library, first add `@Enumerated(EnumType.STRING)` explicitly to all enum fields.**
 
-Once enum values are stored as strings in the database, removing this library causes Hibernate to fall back to
-`ORDINAL` — and string-stored values will no longer be readable. The error looks like:
+Once enum values are stored as strings in the database, removing this library without the explicit annotation causes Hibernate to fall back to `ORDINAL` — and string-stored values will no longer be readable:
 
 ```
 org.springframework.dao.DataIntegrityViolationException:
   Could not extract column from JDBC ResultSet
   [Data conversion error converting "CONFIRMED"]
 ```
-
-If you need to remove the library, add `@Enumerated(EnumType.STRING)` explicitly to all enum fields first.
 
 ## Manual usage (without Spring Boot)
 
@@ -243,8 +224,13 @@ implementation 'io.github.jaeykweon:jpa-auto-enum-string-hibernate5-adapter:1.0.
 AutoEnumStringConfig config = AutoEnumStringConfig.builder()
     .basePackages("com.example.myapp")  // required: your entity root package
     .build();
+
+BootstrapServiceRegistry bootstrapRegistry = new BootstrapServiceRegistryBuilder()
+    .applyIntegrator(new Hibernate5EnumStringIntegrator(config))
+    .build();
 ```
 
+Pass `bootstrapRegistry` to `StandardServiceRegistryBuilder` when building your `SessionFactory`.
 See [examples/hibernate5-manual](examples/hibernate5-manual/) for a complete setup example.
 
 ### Hibernate 6 / 7
@@ -257,8 +243,13 @@ implementation 'io.github.jaeykweon:jpa-auto-enum-string-hibernate6-adapter:1.0.
 AutoEnumStringConfig config = AutoEnumStringConfig.builder()
     .basePackages("com.example.myapp")  // required: your entity root package
     .build();
+
+BootstrapServiceRegistry bootstrapRegistry = new BootstrapServiceRegistryBuilder()
+    .applyIntegrator(new Hibernate6EnumStringIntegrator(config))
+    .build();
 ```
 
+Pass `bootstrapRegistry` to `StandardServiceRegistryBuilder` when building your `SessionFactory`.
 See [examples/hibernate6-manual](examples/hibernate6-manual/) for a complete setup example.
 
 ## FAQ
@@ -275,12 +266,11 @@ If you need STRING mapping for enum values in an element collection, use `@Enume
 
 **Why not use `AttributeConverter`?**
 
-`AttributeConverter<MyEnum, String>` with `@Converter(autoApply = true)` requires one converter class per enum type.
+There are two approaches worth considering: creating one `AttributeConverter` per enum type with `@Converter(autoApply = true)`, or writing a single generic converter that handles all enum types.
 
-`convertToEntityAttribute(String dbData)` does not receive type information, so a single generic converter that handles
-all enum types is not possible with this API.
+The per-type approach requires either writing a converter class per enum type or generating them via an annotation processor. Either way, each new enum type requires a corresponding converter to exist — written by hand or generated. That's overhead that scales with the number of enum types and requires ongoing maintenance as the project grows.
 
-The boilerplate moves to a different file but does not go away.
+The generic approach is not possible with this API: `convertToEntityAttribute(String dbData)` does not receive type information, so there is no way to know which enum class to convert to.
 
 **Why not use an Annotation Processor (compile-time)?**
 
@@ -290,10 +280,9 @@ cannot modify existing classes.
 To inject `@Enumerated(STRING)` into existing entity classes at compile time, AST manipulation is required, which means
 using `com.sun.tools.javac`, a JDK-internal non-public API.
 
-This is what Lombok does, and Lombok developers spend significant effort maintaining compatibility with each JDK version
-because these internal APIs change without notice.
+This is what Lombok does. These internal APIs can change without notice across JDK versions, making long-term maintenance a burden.
 
-Hibernate itself operates at runtime, so in my opinion, runtime integration is the natural fit.
+Hibernate itself operates at runtime, so runtime integration is the natural fit for a library that works at the Hibernate layer.
 
 **Why is Hibernate 5.3 the minimum, not 5.0?**
 
@@ -323,9 +312,12 @@ This property does not store enums as strings (VARCHAR).
 It enables the database's native ENUM column type (e.g., PostgreSQL's `CREATE TYPE` enum), which is a different storage
 strategy entirely.
 
-It is also marked as `@Incubating` (experimental) and was introduced in Hibernate 6.5. In practice, a large number of
-codebases still run on Hibernate 5 and versions of Hibernate 6 below 6.5. This library is designed to be as broadly
-usable as possible, regardless of which Hibernate version is in use.
+It also overrides explicit `@Enumerated(ORDINAL)` annotations — fields the developer intentionally mapped as ordinal are
+remapped to the native enum type, which can silently change existing data semantics.
+
+It is also marked as `@Incubating` (experimental) in both Hibernate 6 and 7, and was introduced in Hibernate 6.5 —
+unavailable to projects on Hibernate 5 or earlier versions of Hibernate 6. This library works across all supported
+Hibernate versions.
 
 ## Known Limitations
 
