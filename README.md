@@ -48,7 +48,8 @@ At application startup, the library hooks into Hibernate's initialization proces
 It scans entity classes in the configured packages, finds enum fields without an explicit `@Enumerated` annotation, and
 registers them as STRING type — the same result as adding `@Enumerated(EnumType.STRING)` to each field manually.
 
-This includes enum fields inside `@Embeddable` components and fields inherited from `@MappedSuperclass`.
+This includes enum fields inside `@Embeddable` components, fields inherited from `@MappedSuperclass`, enum elements
+in `@ElementCollection` fields, and enum fields inside `@Embeddable` types used as `@ElementCollection` elements.
 
 On startup, the library logs which fields were applied:
 
@@ -170,7 +171,8 @@ public class Order {
 }
 ```
 
-The same rules apply inside `@Embeddable` components.
+The same rules apply inside `@Embeddable` components, `@ElementCollection` fields, and enum fields inside
+`@Embeddable` types used as `@ElementCollection` elements.
 
 ```java
 @Embeddable
@@ -179,6 +181,34 @@ public class ShippingInfo {
 
     @Enumerated(EnumType.ORDINAL)
     private OrderStatus legacyStatus;    // explicit: stays as ORDINAL
+}
+```
+
+```java
+@Entity
+public class Order {
+    @ElementCollection
+    private Set<OrderStatus> statuses;            // auto: elements stored as STRING
+
+    @ElementCollection
+    @Enumerated(EnumType.ORDINAL)
+    private Set<OrderStatus> legacyStatuses;      // explicit: elements stay as ORDINAL
+}
+```
+
+```java
+@Embeddable
+public class StatusEntry {
+    private OrderStatus status;           // auto: stored as STRING
+
+    @Enumerated(EnumType.ORDINAL)
+    private OrderStatus legacyStatus;     // explicit: stays as ORDINAL
+}
+
+@Entity
+public class Order {
+    @ElementCollection
+    private Set<StatusEntry> entries;     // enum fields inside embeddable are also auto-mapped
 }
 ```
 
@@ -258,11 +288,6 @@ See [examples/hibernate6-manual](examples/hibernate6-manual/) for a complete set
 
 Yes. Lombok annotations (`@Builder`, `@NoArgsConstructor`, `@Getter`, etc.) coexist with this library without any issues.
 The library reads annotations directly from fields — Lombok-generated methods are not involved.
-
-**Does this apply to `@ElementCollection` enum fields?**
-
-No. `@ElementCollection` fields are not entity fields and are not processed by this library.
-If you need STRING mapping for enum values in an element collection, use `@Enumerated(EnumType.STRING)` explicitly on that field.
 
 **Why not use `AttributeConverter`?**
 

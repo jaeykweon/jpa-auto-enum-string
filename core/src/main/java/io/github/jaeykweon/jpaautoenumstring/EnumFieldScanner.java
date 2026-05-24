@@ -3,6 +3,8 @@ package io.github.jaeykweon.jpaautoenumstring;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -51,6 +53,22 @@ public class EnumFieldScanner {
                 visitedEmbeddables.remove(embeddableType);
             }
         }
+    }
+
+    public boolean isSkipped(Field field) {
+        return shouldSkip(field);
+    }
+
+    // Returns the element enum type for a parameterized collection field (e.g. Set<OrderStatus> → OrderStatus),
+    // or null if the field is a raw type, has multiple type args, or the element is not an enum.
+    public static Class<?> extractCollectionElementEnumType(Field field) {
+        Type genericType = field.getGenericType();
+        if (!(genericType instanceof ParameterizedType)) return null;
+        Type[] typeArgs = ((ParameterizedType) genericType).getActualTypeArguments();
+        if (typeArgs.length != 1) return null;
+        if (!(typeArgs[0] instanceof Class)) return null;
+        Class<?> elementType = (Class<?>) typeArgs[0];
+        return elementType.isEnum() ? elementType : null;
     }
 
     private boolean shouldSkip(Field field) {

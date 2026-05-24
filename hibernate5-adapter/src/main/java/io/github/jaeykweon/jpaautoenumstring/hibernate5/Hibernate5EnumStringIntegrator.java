@@ -24,8 +24,10 @@ public class Hibernate5EnumStringIntegrator implements Integrator {
 
     private static final Logger log = Logger.getLogger(Hibernate5EnumStringIntegrator.class.getName());
     private final EnumFieldScanner scanner;
+    private final AutoEnumStringConfig config;
 
     public Hibernate5EnumStringIntegrator(AutoEnumStringConfig config) {
+        this.config = config;
         this.scanner = new EnumFieldScanner(config);
     }
 
@@ -49,10 +51,121 @@ public class Hibernate5EnumStringIntegrator implements Integrator {
                 }
             }
         }
+        processCollectionBindings(metadata, applied);
         if (!applied.isEmpty()) {
             log.info("[jpa-auto-enum-string] Applied STRING mapping to " + applied.size()
                 + " enum field(s): " + String.join(", ", applied));
         }
+    }
+
+    private void processCollectionBindings(Metadata metadata, List<String> applied) {
+        for (org.hibernate.mapping.Collection collection : metadata.getCollectionBindings()) {
+            String role = collection.getRole();
+            int lastDot = role.lastIndexOf('.');
+            if (lastDot < 0) continue;
+            String className = role.substring(0, lastDot);
+            String fieldName = role.substring(lastDot + 1);
+
+            Class<?> ownerClass;
+            try {
+                ownerClass = Class.forName(className);
+            } catch (ClassNotFoundException e) {
+                continue;
+            }
+            if (!config.isInBasePackage(ownerClass)) continue;
+
+            Field field;
+            try {
+                field = findField(ownerClass, fieldName);
+            } catch (NoSuchFieldException e) {
+                continue;
+            }
+
+            if (collection.getElement() instanceof Component) {
+                processEmbeddableCollectionElement(
+                    (Component) collection.getElement(), ownerClass, fieldName, applied);
+            } else if (collection.getElement() instanceof SimpleValue) {
+                SimpleValue element = (SimpleValue) collection.getElement();
+                if (scanner.isSkipped(field)) continue;
+                Class<?> elementType = EnumFieldScanner.extractCollectionElementEnumType(field);
+                if (elementType == null) continue;
+                String fieldRef = ownerClass.getSimpleName() + "." + fieldName + "[]";
+                try {
+                    applyStringMappingToElement(element, elementType);
+                    applied.add(fieldRef);
+                } catch (Exception e) {
+                    throw new IllegalStateException(
+                        "[jpa-auto-enum-string] Failed to apply STRING mapping to " + fieldRef, e);
+                }
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void processEmbeddableCollectionElement(Component component, Class<?> ownerClass,
+                                                     String fieldName, List<String> applied) {
+        Class<?> embeddableClass;
+        try {
+            embeddableClass = component.getComponentClass();
+        } catch (Exception e) {
+            return;
+        }
+        boolean anyApplied = false;
+        java.util.Iterator<Property> it = component.getPropertyIterator();
+        while (it.hasNext()) {
+            Property prop = it.next();
+            if (!(prop.getValue() instanceof SimpleValue)) continue;
+            SimpleValue sv = (SimpleValue) prop.getValue();
+            Field embeddableField;
+            try {
+                embeddableField = findField(embeddableClass, prop.getName());
+            } catch (NoSuchFieldException e) {
+                continue;
+            }
+            if (scanner.isSkipped(embeddableField)) continue;
+            if (!embeddableField.getType().isEnum()) continue;
+            String fieldRef = ownerClass.getSimpleName() + "." + fieldName + "[]." + prop.getName();
+            try {
+                applyStringMappingToElement(sv, embeddableField.getType());
+                applied.add(fieldRef);
+                anyApplied = true;
+            } catch (Exception e) {
+                throw new IllegalStateException(
+                    "[jpa-auto-enum-string] Failed to apply STRING mapping to " + fieldRef, e);
+            }
+        }
+        if (anyApplied) {
+            try {
+                Field componentTypeField = Component.class.getDeclaredField("type");
+                componentTypeField.setAccessible(true);
+                componentTypeField.set(component, null);
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    private static Field findField(Class<?> clazz, String fieldName) throws NoSuchFieldException {
+        Class<?> current = clazz;
+        while (current != null && current != Object.class) {
+            try {
+                return current.getDeclaredField(fieldName);
+            } catch (NoSuchFieldException e) {
+                current = current.getSuperclass();
+            }
+        }
+        throw new NoSuchFieldException(fieldName + " in " + clazz.getName());
+    }
+
+    private static void applyStringMappingToElement(SimpleValue simpleValue, Class<?> enumType) throws Exception {
+        simpleValue.setTypeName(org.hibernate.type.EnumType.class.getName());
+        Properties params = new Properties();
+        params.setProperty(org.hibernate.type.EnumType.ENUM, enumType.getName());
+        params.setProperty(org.hibernate.type.EnumType.TYPE, String.valueOf(java.sql.Types.VARCHAR));
+        simpleValue.setTypeParameters(params);
+
+        Field simpleTypeField = SimpleValue.class.getDeclaredField("type");
+        simpleTypeField.setAccessible(true);
+        simpleTypeField.set(simpleValue, null);
     }
 
     /**
