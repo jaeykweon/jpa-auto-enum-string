@@ -1,5 +1,7 @@
 # jpa-auto-enum-string
 
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.jaeykweon/jpa-auto-enum-string-core)](https://central.sonatype.com/artifact/io.github.jaeykweon/jpa-auto-enum-string-core)
+
 **JPA enum 필드마다 `@Enumerated(EnumType.STRING)`을 반복해서 달아야 하는 번거로움을 없애줍니다.**
 
 JPA에서 enum을 DB에 저장할 때 `EnumType.STRING`은 사실상 표준입니다.

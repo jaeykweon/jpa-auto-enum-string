@@ -1,5 +1,7 @@
 # jpa-auto-enum-string
 
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.jaeykweon/jpa-auto-enum-string-core)](https://central.sonatype.com/artifact/io.github.jaeykweon/jpa-auto-enum-string-core)
+
 **Read this in other languages:** [한국어](README.ko.md)
 
 **Eliminates `@Enumerated(EnumType.STRING)` boilerplate from every JPA enum field.**
