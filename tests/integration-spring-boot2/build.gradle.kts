@@ -1,4 +1,11 @@
 val springBootVersion: String = project.findProperty("springBootVersion")?.toString() ?: "2.7.18"
+val testJavaVersion = project.findProperty("testJavaVersion")?.toString()?.toInt() ?: 8
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(testJavaVersion))
+    }
+}
 
 dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:$springBootVersion"))

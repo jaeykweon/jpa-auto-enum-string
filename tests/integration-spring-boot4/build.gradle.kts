@@ -1,6 +1,9 @@
+val testJavaVersion = project.findProperty("testJavaVersion")?.toString()?.toInt() ?: 21
+
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(testJavaVersion))
+    }
 }
 
 val springBootVersion = "4.0.6"
