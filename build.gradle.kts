@@ -30,6 +30,7 @@ subprojects {
 
     tasks.withType<Test> {
         useJUnitPlatform()
+        outputs.upToDateWhen { false }
     }
 
     plugins.withId("com.vanniktech.maven.publish") {
