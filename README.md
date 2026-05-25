@@ -16,7 +16,13 @@ But it has to be declared manually on every single enum field.
 
 This library applies it automatically, so your entities stay clean and focused.
 
-**Without this library**
+<table>
+<tr>
+<th>Without this library</th>
+<th>With this library</th>
+</tr>
+<tr>
+<td>
 
 ```java
 @Entity
@@ -32,7 +38,8 @@ public class Order {
 }
 ```
 
-**With this library**
+</td>
+<td>
 
 ```java
 @Entity
@@ -42,6 +49,10 @@ public class Order {
     private DeliveryType deliveryType;
 }
 ```
+
+</td>
+</tr>
+</table>
 
 ## How it works
 
@@ -384,4 +395,4 @@ This is an H2-side regression ([H2 issue #4302](https://github.com/h2database/h2
 
 ## Issues
 
-Bug reports and questions are welcome via [GitHub Issues](https://github.com/jaeykweon/jpa-auto-enum-string/issues).
+Bug reports, questions, and any other contributions are welcome via [GitHub Issues](https://github.com/jaeykweon/jpa-auto-enum-string/issues).
