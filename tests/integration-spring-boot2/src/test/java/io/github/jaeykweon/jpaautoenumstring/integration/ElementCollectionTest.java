@@ -8,6 +8,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -23,7 +25,7 @@ class ElementCollectionTest {
 
     @Test
     void elementCollection_enumElements_areStoredAsString() {
-        OrderWithElementCollection order = new OrderWithElementCollection(Set.of(OrderStatus.CONFIRMED, OrderStatus.SHIPPED));
+        OrderWithElementCollection order = new OrderWithElementCollection(new HashSet<>(Arrays.asList(OrderStatus.CONFIRMED, OrderStatus.SHIPPED)));
         repository.saveAndFlush(order);
 
         List<String> rawValues = jdbcTemplate.queryForList(
@@ -36,17 +38,17 @@ class ElementCollectionTest {
 
     @Test
     void elementCollection_enumElements_areReadBackCorrectly() {
-        OrderWithElementCollection order = new OrderWithElementCollection(Set.of(OrderStatus.PENDING));
+        OrderWithElementCollection order = new OrderWithElementCollection(new HashSet<>(Arrays.asList(OrderStatus.PENDING)));
         repository.saveAndFlush(order);
 
         OrderWithElementCollection found = repository.findAll().get(0);
 
-        assertEquals(Set.of(OrderStatus.PENDING), found.getStatuses());
+        assertEquals(new HashSet<>(Arrays.asList(OrderStatus.PENDING)), found.getStatuses());
     }
 
     @Test
     void elementCollection_withExplicitOrdinal_staysOrdinal() {
-        OrderWithElementCollection order = new OrderWithElementCollection(Set.of());
+        OrderWithElementCollection order = new OrderWithElementCollection(new HashSet<>());
         order.addLegacyStatus(OrderStatus.PENDING);
         repository.saveAndFlush(order);
 

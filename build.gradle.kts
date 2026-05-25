@@ -20,9 +20,12 @@ allprojects {
 subprojects {
     apply(plugin = "java")
 
-    java {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+    // Test modules use toolchains and manage their own Java version
+    if (!path.startsWith(":tests:")) {
+        java {
+            sourceCompatibility = JavaVersion.VERSION_1_8
+            targetCompatibility = JavaVersion.VERSION_1_8
+        }
     }
 
     tasks.withType<Test> {

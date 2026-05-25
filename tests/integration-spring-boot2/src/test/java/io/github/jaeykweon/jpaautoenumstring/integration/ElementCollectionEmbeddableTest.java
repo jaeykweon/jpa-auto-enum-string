@@ -8,6 +8,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,7 +25,7 @@ class ElementCollectionEmbeddableTest {
     @Test
     void embeddableElementCollection_unannotatedEnumField_isStoredAsString() {
         OrderStatusEntry entry = new OrderStatusEntry(OrderStatus.CONFIRMED, OrderStatus.PENDING);
-        repository.saveAndFlush(new OrderWithEmbeddableCollection(Set.of(entry)));
+        repository.saveAndFlush(new OrderWithEmbeddableCollection(new HashSet<>(Arrays.asList(entry))));
 
         String rawStatus = jdbcTemplate.queryForObject(
             "SELECT status FROM order_status_entries LIMIT 1", String.class);
@@ -34,7 +36,7 @@ class ElementCollectionEmbeddableTest {
     @Test
     void embeddableElementCollection_explicitOrdinalField_staysOrdinal() {
         OrderStatusEntry entry = new OrderStatusEntry(OrderStatus.CONFIRMED, OrderStatus.PENDING);
-        repository.saveAndFlush(new OrderWithEmbeddableCollection(Set.of(entry)));
+        repository.saveAndFlush(new OrderWithEmbeddableCollection(new HashSet<>(Arrays.asList(entry))));
 
         Number rawLegacy = jdbcTemplate.queryForObject(
             "SELECT legacy_status FROM order_status_entries LIMIT 1", Number.class);
@@ -45,10 +47,10 @@ class ElementCollectionEmbeddableTest {
     @Test
     void embeddableElementCollection_isReadBackCorrectly() {
         OrderStatusEntry entry = new OrderStatusEntry(OrderStatus.SHIPPED, OrderStatus.CANCELLED);
-        repository.saveAndFlush(new OrderWithEmbeddableCollection(Set.of(entry)));
+        repository.saveAndFlush(new OrderWithEmbeddableCollection(new HashSet<>(Arrays.asList(entry))));
 
         OrderWithEmbeddableCollection found = repository.findAll().get(0);
 
-        assertEquals(Set.of(entry), found.getEntries());
+        assertEquals(new HashSet<>(Arrays.asList(entry)), found.getEntries());
     }
 }
