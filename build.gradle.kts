@@ -36,7 +36,7 @@ subprojects {
     plugins.withId("com.vanniktech.maven.publish") {
         configure<MavenPublishBaseExtension> {
             configure(JavaLibrary(javadocJar = JavadocJar.Javadoc(), sourcesJar = true))
-            publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+            publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
             signAllPublications()
             pom {
                 url.set("https://github.com/jaeykweon/jpa-auto-enum-string")
