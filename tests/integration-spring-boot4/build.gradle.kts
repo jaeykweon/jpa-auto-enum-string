@@ -6,6 +6,14 @@ java {
     }
 }
 
+tasks.register<Test>("testJava21") {
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    })
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+}
+
 val springBootVersion = "4.0.6"
 
 dependencies {

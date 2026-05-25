@@ -7,6 +7,16 @@ java {
     }
 }
 
+listOf(8, 11, 17).forEach { version ->
+    tasks.register<Test>("testJava$version") {
+        javaLauncher.set(javaToolchains.launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(version))
+        })
+        testClassesDirs = sourceSets["test"].output.classesDirs
+        classpath = sourceSets["test"].runtimeClasspath
+    }
+}
+
 dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:$springBootVersion"))
     testImplementation(project(":spring-boot2-starter"))

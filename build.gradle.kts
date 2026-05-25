@@ -61,3 +61,15 @@ subprojects {
         }
     }
 }
+
+// Runs the full Java version matrix equivalent to CI
+tasks.register("testAllJavaVersions") {
+    dependsOn(
+        ":tests:integration-spring-boot2:testJava8",
+        ":tests:integration-spring-boot2:testJava11",
+        ":tests:integration-spring-boot2:testJava17",
+        ":tests:integration-spring-boot3:testJava17",
+        ":tests:integration-spring-boot3:testJava21",
+        ":tests:integration-spring-boot4:testJava21",
+    )
+}

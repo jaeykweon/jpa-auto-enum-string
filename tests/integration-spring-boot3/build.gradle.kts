@@ -6,6 +6,16 @@ java {
     }
 }
 
+listOf(17, 21).forEach { version ->
+    tasks.register<Test>("testJava$version") {
+        javaLauncher.set(javaToolchains.launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(version))
+        })
+        testClassesDirs = sourceSets["test"].output.classesDirs
+        classpath = sourceSets["test"].runtimeClasspath
+    }
+}
+
 val springBootVersion = "3.3.4"
 
 dependencies {
