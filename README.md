@@ -1,5 +1,7 @@
 # jpa-auto-enum-string
 
+**Read this in other languages:** [한국어](README.ko.md)
+
 **Eliminates `@Enumerated(EnumType.STRING)` boilerplate from every JPA enum field.**
 
 In typical JPA applications, `EnumType.STRING` is the standard choice for enum persistence.
