@@ -145,7 +145,7 @@ implementation 'io.github.jaeykweon:jpa-auto-enum-string-spring-boot4-starter:{v
 
 No additional configuration needed. The library scans the package of your `@SpringBootApplication` class and all sub-packages automatically.
 
-> ⚠️ **Adding to an existing project?** Read the [Warning section](#️-warning-do-not-add-to-existing-projects-without-a-data-migration) before proceeding.
+> ⚠️ **Adding to an existing project?** Read the [caution section](#-be-careful-when-adding-to-an-existing-project) before proceeding.
 
 `base-packages` configuration is only needed when your entities live outside the `@SpringBootApplication` package — most commonly in a separate Gradle/Maven module:
 
@@ -227,21 +227,22 @@ public class Order {
 }
 ```
 
-## ⚠️ Warning: Do not add to existing projects without a data migration
+## ⚠️ Be careful when adding to an existing project
 
 This library changes how Hibernate reads and writes enum fields.
 
-If your database already stores enum values as integers (`0`, `1`, `2`),
-adding this library will cause mapping failures at runtime — existing records will no longer be readable.
+If your database already stores enum values as strings, you can add this library safely — no migration needed.
 
-**Safe to add without migration if:**
+If any enum fields are stored as integers (`0`, `1`, `2`), adding this library will cause mapping failures at runtime — existing records will no longer be readable.
+
+**No migration needed if:**
 
 - Starting a new project
-- All enum fields in your database are already stored as strings
+- All enum fields in your database are already stored as strings (the common case)
 
-**Required before adding to an existing project:**
+**Migration required if:**
 
-1. Check whether any enum fields are stored as integers in the database
+1. Any enum fields are stored as integers in the database
 2. Migrate integer values to string values (`0` → `'PENDING'`, `1` → `'COMPLETED'`, ...)
 3. Then add this library
 
@@ -298,6 +299,17 @@ Pass `bootstrapRegistry` to `StandardServiceRegistryBuilder` when building your 
 See [examples/hibernate6-manual](examples/hibernate6-manual/) for a complete setup example.
 
 ## FAQ
+
+**How do I verify that `@Embeddable`, `@MappedSuperclass`, and `@ElementCollection` support actually works?**
+
+Each feature is covered by integration tests that run against a real database (H2, Spring Boot 3):
+
+- [`@Embeddable`](tests/integration-spring-boot3/src/test/java/io/github/jaeykweon/jpaautoenumstring/integration/EmbeddableIntegrationTest.java) — enum fields inside embeddable components
+- [`@MappedSuperclass`](tests/integration-spring-boot3/src/test/java/io/github/jaeykweon/jpaautoenumstring/integration/InheritanceIntegrationTest.java) — enum fields inherited from a mapped superclass
+- [`@ElementCollection` (plain enum)](tests/integration-spring-boot3/src/test/java/io/github/jaeykweon/jpaautoenumstring/integration/ElementCollectionTest.java) — enum elements in a collection field
+- [`@ElementCollection` (embeddable element)](tests/integration-spring-boot3/src/test/java/io/github/jaeykweon/jpaautoenumstring/integration/ElementCollectionEmbeddableTest.java) — enum fields inside an embeddable used as a collection element
+
+The same tests exist for [Spring Boot 2](tests/integration-spring-boot2/src/test/java/io/github/jaeykweon/jpaautoenumstring/integration/) and [Spring Boot 4](tests/integration-spring-boot4/src/test/java/io/github/jaeykweon/jpaautoenumstring/integration/).
 
 **Does this work with Lombok?**
 

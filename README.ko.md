@@ -141,7 +141,7 @@ implementation 'io.github.jaeykweon:jpa-auto-enum-string-spring-boot4-starter:{v
 
 별도 설정 없이 바로 동작합니다. `@SpringBootApplication` 클래스의 패키지와 하위 패키지를 자동으로 스캔합니다.
 
-> ⚠️ **기존 프로젝트에 추가하려는 경우** 진행 전에 [주의사항](#️-주의사항-데이터-마이그레이션-없이-기존-프로젝트에-추가하지-마세요)을 반드시 읽어보세요.
+> ⚠️ **기존 프로젝트에 추가하려는 경우** 진행 전에 [주의사항](#-기존-프로젝트에-추가할-때-주의하세요)을 반드시 읽어보세요.
 
 `base-packages` 설정은 엔티티가 `@SpringBootApplication` 패키지 밖에 있을 때만 필요합니다. 주로 엔티티가 별도 Gradle/Maven 모듈에 있는 경우입니다:
 
@@ -222,18 +222,20 @@ public class Order {
 }
 ```
 
-## ⚠️ 주의사항: 데이터 마이그레이션 없이 기존 프로젝트에 추가하지 마세요
+## ⚠️ 기존 프로젝트에 추가할 때 주의하세요
 
 이 라이브러리는 Hibernate가 enum 필드를 읽고 쓰는 방식을 바꿉니다.
 
-DB에 이미 enum 값이 정수(`0`, `1`, `2`)로 저장되어 있다면, 라이브러리를 추가하는 순간 런타임 매핑 오류가 발생하고 기존 레코드를 읽을 수 없게 됩니다.
+DB의 enum 필드가 이미 문자열로 저장되어 있다면 마이그레이션 없이 바로 추가해도 됩니다.
+
+정수(`0`, `1`, `2`)로 저장된 enum 필드가 있다면, 라이브러리를 추가하는 순간 런타임 매핑 오류가 발생하고 기존 레코드를 읽을 수 없게 됩니다.
 
 **마이그레이션 없이 추가해도 괜찮은 경우:**
 
 - 새 프로젝트를 시작하는 경우
-- DB의 모든 enum 필드가 이미 문자열로 저장되어 있는 경우
+- DB의 모든 enum 필드가 이미 문자열로 저장되어 있는 경우 (일반적인 케이스)
 
-**기존 프로젝트에 추가하기 전 필수 절차:**
+**마이그레이션이 필요한 경우:**
 
 1. DB에 정수로 저장된 enum 필드가 있는지 확인
 2. 정수 값을 문자열로 마이그레이션 (`0` → `'PENDING'`, `1` → `'COMPLETED'`, ...)
@@ -294,6 +296,17 @@ BootstrapServiceRegistry bootstrapRegistry = new BootstrapServiceRegistryBuilder
 전체 설정 예시는 [examples/hibernate6-manual](examples/hibernate6-manual/)을 참고하세요.
 
 ## FAQ
+
+**`@Embeddable`, `@MappedSuperclass`, `@ElementCollection` 지원이 실제로 동작하는지 어떻게 확인할 수 있나요?**
+
+각 기능은 실제 데이터베이스(H2)를 대상으로 하는 통합 테스트로 검증되어 있습니다(Spring Boot 3):
+
+- [`@Embeddable`](tests/integration-spring-boot3/src/test/java/io/github/jaeykweon/jpaautoenumstring/integration/EmbeddableIntegrationTest.java) — embeddable 컴포넌트 내부의 enum 필드
+- [`@MappedSuperclass`](tests/integration-spring-boot3/src/test/java/io/github/jaeykweon/jpaautoenumstring/integration/InheritanceIntegrationTest.java) — mapped superclass에서 상속된 enum 필드
+- [`@ElementCollection` (plain enum)](tests/integration-spring-boot3/src/test/java/io/github/jaeykweon/jpaautoenumstring/integration/ElementCollectionTest.java) — 컬렉션 필드의 enum element
+- [`@ElementCollection` (embeddable element)](tests/integration-spring-boot3/src/test/java/io/github/jaeykweon/jpaautoenumstring/integration/ElementCollectionEmbeddableTest.java) — 컬렉션 element로 사용되는 embeddable 내부의 enum 필드
+
+동일한 테스트가 [Spring Boot 2](tests/integration-spring-boot2/src/test/java/io/github/jaeykweon/jpaautoenumstring/integration/)와 [Spring Boot 4](tests/integration-spring-boot4/src/test/java/io/github/jaeykweon/jpaautoenumstring/integration/)에도 있습니다.
 
 **Lombok과 같이 써도 되나요?**
 
